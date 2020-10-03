@@ -8,7 +8,10 @@ import qualified System.Mem as Mem
 import qualified Zippy
 
 main :: IO ()
-main = mapM_ test replays
+main = do
+  (allocations, (duration, ())) <- withAllocations (withDuration
+    (mapM_ test replays))
+  print (allocations, duration)
 
 test :: String -> IO ()
 test replay = do

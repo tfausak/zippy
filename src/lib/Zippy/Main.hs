@@ -2,6 +2,9 @@ module Zippy.Main where
 
 import qualified Control.Monad as Monad
 import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Builder as Builder
+import qualified Data.ByteString.Lazy as LazyByteString
+import qualified Data.Functor.Identity as Identity
 import qualified Data.Version as Version
 import qualified Paths_zippy as Package
 import qualified RocketLeague.Replay as Replay
@@ -10,9 +13,12 @@ import qualified System.Environment as Environment
 import qualified System.Exit as Exit
 import qualified System.IO as IO
 import qualified Zippy.Type.Config as Config
+import qualified Zippy.Type.Decoder as Decoder
 import qualified Zippy.Type.Flag as Flag
 import qualified Zippy.Type.Json as Json
 import qualified Zippy.Type.Mode as Mode
+import qualified Zippy.Type.Pair as Pair
+import qualified Zippy.Type.Result as Result
 
 main :: IO ()
 main = do
@@ -51,16 +57,21 @@ mainWith name arguments = do
 
   output <- case Config.determineMode config of
     Mode.Decode -> do
-      replay <- either die pure (Replay.decode input)
+      replay <- either die pure (runDecoder Replay.decode input)
       pure (Json.encode (Replay.toJson replay))
     Mode.Encode -> do
-      json <- either die pure (Json.decode input)
+      json <- either die pure (runDecoder Json.decode input)
       replay <- either die pure (Replay.fromJson json)
       pure (Replay.encode replay)
 
   case Config.output config of
-    Nothing -> ByteString.putStr output
-    Just filePath -> ByteString.writeFile filePath output
+    Nothing -> Builder.hPutBuilder IO.stdout output
+    Just filePath -> LazyByteString.writeFile filePath (Builder.toLazyByteString output)
+
+runDecoder :: Decoder.Decoder s () Identity.Identity a -> s -> Either String a
+runDecoder d s = case Identity.runIdentity (Decoder.run d s ()) of
+  Result.Fail p -> Left (show p)
+  Result.Pass (Pair.Pair _ x) -> Right x
 
 die :: String -> IO a
 die message = do

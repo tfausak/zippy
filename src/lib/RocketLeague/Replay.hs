@@ -1,20 +1,22 @@
 module RocketLeague.Replay where
 
 import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Builder as Builder
+import qualified Zippy.Type.Decoder as Decoder
 import qualified Zippy.Type.Json as Json
 
 data Replay = Replay
   {
   } deriving (Eq, Show)
 
-decode :: ByteString.ByteString -> Either String Replay
-decode _ = Right Replay {}
+decode :: Monad m => Decoder.Decoder ByteString.ByteString u m Replay
+decode = pure Replay {}
 
-encode :: Replay -> ByteString.ByteString
-encode _ = ByteString.empty
+encode :: Replay -> Builder.Builder
+encode _ = mempty
 
 fromJson :: Json.Json -> Either String Replay
-fromJson _ = Right Replay {}
+fromJson _ = Left "TODO"
 
 toJson :: Replay -> Json.Json
-toJson _ = Json.Null
+toJson _ = Json.object []
