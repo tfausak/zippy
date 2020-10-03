@@ -4,8 +4,6 @@ import qualified Data.Version as Version
 import qualified Paths_zippy as Package
 import qualified System.Environment as Environment
 
-data T = C deriving Eq
-
 main :: IO ()
 main = do
   name <- Environment.getProgName
