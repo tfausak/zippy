@@ -4,12 +4,15 @@ import qualified Control.Monad as Monad
 import qualified Data.ByteString as ByteString
 import qualified Data.Version as Version
 import qualified Paths_zippy as Package
-import qualified System.Environment as Environment
+import qualified RocketLeague.Replay as Replay
 import qualified System.Console.GetOpt as Console
+import qualified System.Environment as Environment
 import qualified System.Exit as Exit
 import qualified System.IO as IO
 import qualified Zippy.Type.Config as Config
 import qualified Zippy.Type.Flag as Flag
+import qualified Zippy.Type.Json as Json
+import qualified Zippy.Type.Mode as Mode
 
 main :: IO ()
 main = do
@@ -29,9 +32,8 @@ mainWith name arguments = do
   Monad.forM_ parameters (\ parameter -> IO.hPutStrLn IO.stderr
     ("WARNING: unexpected parameter `" <> parameter <> "'"))
 
-  Monad.unless (null problems) (do
-    mapM_ (IO.hPutStr IO.stderr . mappend "ERROR: ") problems
-    Exit.exitFailure)
+  mapM_ (IO.hPutStr IO.stderr . mappend "ERROR: ") problems
+  Monad.unless (null problems) Exit.exitFailure
 
   Monad.when (elem Flag.Help flags) (do
     putStr (Console.usageInfo (unwords [name, "version", version]) descriptions)
@@ -41,18 +43,29 @@ mainWith name arguments = do
     putStrLn version
     Exit.exitSuccess)
 
-  config <- case Config.fromFlags flags of
-    Left problem -> do
-      IO.hPutStrLn IO.stderr ("ERROR: " <> problem)
-      Exit.exitFailure
-    Right config -> pure config
+  config <- either die pure (Config.fromFlags flags)
 
-  contents <- case Config.input config of
+  input <- case Config.input config of
     Nothing -> ByteString.getContents
     Just filePath -> ByteString.readFile filePath
+
+  output <- case Config.determineMode config of
+    Mode.Decode -> do
+      replay <- either die pure (Replay.decode input)
+      pure (Json.encode (Replay.toJson replay))
+    Mode.Encode -> do
+      json <- either die pure (Json.decode input)
+      replay <- either die pure (Replay.fromJson json)
+      pure (Replay.encode replay)
+
   case Config.output config of
-    Nothing -> ByteString.putStr contents
-    Just filePath -> ByteString.writeFile filePath contents
+    Nothing -> ByteString.putStr output
+    Just filePath -> ByteString.writeFile filePath output
+
+die :: String -> IO a
+die message = do
+  IO.hPutStrLn IO.stderr ("ERROR: " <> message)
+  Exit.exitFailure
 
 version :: String
 version = Version.showVersion Package.version
