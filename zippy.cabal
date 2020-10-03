@@ -1,0 +1,58 @@
+cabal-version: >= 1.8
+
+name: zippy
+version: 0.0.0.0
+synopsis: Parse and generate Rocket League replays.
+description: Zippy parses and generates Rocket League replays.
+
+build-type: Simple
+category: Game
+extra-source-files: README.markdown
+license-file: LICENSE.markdown
+license: ISC
+maintainer: Taylor Fausak
+
+source-repository head
+  location: https://github.com/tfausak/zippy
+  type: git
+
+library
+  build-depends:
+    base >= 4.9.0 && < 4.15
+  exposed-modules: Zippy
+  ghc-options:
+    -Weverything
+    -Wno-all-missed-specialisations
+    -Wno-implicit-prelude
+    -Wno-missed-specialisations
+    -Wno-missing-exported-signatures
+    -Wno-safe
+    -Wno-unsafe
+  hs-source-dirs: src/lib
+  other-modules: Paths_zippy
+
+  if impl(ghc >= 8.4)
+    ghc-options:
+      -Wno-missing-export-lists
+
+  if impl(ghc >= 8.8)
+    ghc-options:
+      -Wno-missing-deriving-strategies
+
+  if impl(ghc >= 8.10)
+    ghc-options:
+      -Wno-missing-safe-haskell-mode
+      -Wno-prepositive-qualified-module
+
+executable zippy
+  build-depends: base, zippy
+  ghc-options: -rtsopts -threaded
+  hs-source-dirs: src/exe
+  main-is: Main.hs
+
+test-suite test
+  build-depends: base, zippy
+  ghc-options: -rtsopts -threaded
+  hs-source-dirs: src/test
+  main-is: Main.hs
+  type: exitcode-stdio-1.0
