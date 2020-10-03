@@ -1,3 +1,7 @@
+import qualified Data.Int as Int
+import qualified Data.Word as Word
+import qualified GHC.Clock as Clock
+import qualified System.Mem as Mem
 import qualified Zippy
 
 main :: IO ()
@@ -6,7 +10,23 @@ main = mapM_ test replays
 test :: String -> IO ()
 test replay = do
   let input = "replays/" ++ replay ++ ".replay"
-  Zippy.mainWith "zippy:test" [input]
+  (allocations, (duration, ())) <- withAllocations (withDuration
+    (Zippy.mainWith "zippy:test" [input]))
+  print (allocations, duration)
+
+withAllocations :: IO a -> IO (Int.Int64, a)
+withAllocations action = do
+  before <- Mem.getAllocationCounter
+  result <- action
+  after <- Mem.getAllocationCounter
+  pure (before - after, result)
+
+withDuration :: IO a -> IO (Word.Word64, a)
+withDuration action = do
+  before <- Clock.getMonotonicTimeNSec
+  result <- action
+  after <- Clock.getMonotonicTimeNSec
+  pure (after - before, result)
 
 replays :: [String]
 replays =
