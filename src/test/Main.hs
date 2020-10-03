@@ -16,10 +16,19 @@ main = do
 test :: String -> IO ()
 test replay = do
   let input = "replays/" <> replay <> ".replay"
-  withTemporaryFile (".json") (\ output -> do
-    (allocations, (duration, ())) <- withAllocations (withDuration
-      (Zippy.mainWith "zippy:test" ["--input", input, "--output", output]))
-    print (allocations, duration))
+  withTemporaryFile ".json" (\ json -> do
+    do
+      (allocations, duration) <- zippy input json
+      print (allocations, duration)
+    withTemporaryFile ".replay" (\ output -> do
+      (allocations, duration) <- zippy json output
+      print (allocations, duration)))
+
+zippy :: FilePath -> FilePath -> IO (Int.Int64, Word.Word64)
+zippy input output = do
+  (allocations, (duration, ())) <- withAllocations (withDuration
+    (Zippy.mainWith "zippy" ["--input", input, "--output", output]))
+  pure (allocations, duration)
 
 withAllocations :: IO a -> IO (Int.Int64, a)
 withAllocations action = do

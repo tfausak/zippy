@@ -30,7 +30,7 @@ object :: [(String, Json)] -> Json
 object = Object . List.fromList . fmap (Pair.fromTuple . Bifunctor.first Text.pack)
 
 decode :: Monad m => Decoder.Decoder ByteString.ByteString u m Json
-decode = fail "TODO"
+decode = pure Null -- TODO
 
 encode :: Json -> Builder.Builder
 encode json = case json of

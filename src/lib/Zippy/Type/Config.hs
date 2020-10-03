@@ -38,5 +38,6 @@ determineMode config = case mode config of
     Just ".json" -> Mode.Encode
     Just ".replay" -> Mode.Decode
     _ -> case fmap FilePath.takeExtension (output config) of
+      Just ".json" -> Mode.Decode
       Just ".replay" -> Mode.Encode
       _ -> Mode.Decode
