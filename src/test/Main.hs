@@ -1,6 +1,9 @@
+import qualified Control.Exception as Exception
 import qualified Data.Int as Int
 import qualified Data.Word as Word
 import qualified GHC.Clock as Clock
+import qualified System.Directory as Directory
+import qualified System.IO as IO
 import qualified System.Mem as Mem
 import qualified Zippy
 
@@ -9,10 +12,11 @@ main = mapM_ test replays
 
 test :: String -> IO ()
 test replay = do
-  let input = "replays/" ++ replay ++ ".replay"
-  (allocations, (duration, ())) <- withAllocations (withDuration
-    (Zippy.mainWith "zippy:test" [input]))
-  print (allocations, duration)
+  let input = "replays/" <> replay <> ".replay"
+  withTemporaryFile (".json") (\ output -> do
+    (allocations, (duration, ())) <- withAllocations (withDuration
+      (Zippy.mainWith "zippy:test" ["--input", input, "--output", output]))
+    print (allocations, duration))
 
 withAllocations :: IO a -> IO (Int.Int64, a)
 withAllocations action = do
@@ -27,6 +31,17 @@ withDuration action = do
   result <- action
   after <- Clock.getMonotonicTimeNSec
   pure (after - before, result)
+
+withTemporaryFile :: String -> (FilePath -> IO a) -> IO a
+withTemporaryFile template action = do
+  directory <- Directory.getTemporaryDirectory
+  Exception.bracket
+    (do
+      (filePath, handle) <- IO.openTempFile directory template
+      IO.hClose handle
+      pure filePath)
+    Directory.removeFile
+    action
 
 replays :: [String]
 replays =
