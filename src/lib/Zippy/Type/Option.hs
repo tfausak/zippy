@@ -5,6 +5,9 @@ data Option a
   | Some a
   deriving (Eq, Show)
 
+instance Functor Option where
+  fmap f = option None $ Some . f
+
 fromMaybe :: Maybe a -> Option a
 fromMaybe = maybe None Some
 

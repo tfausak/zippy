@@ -17,6 +17,7 @@ import qualified Zippy.Type.Config as Config
 import qualified Zippy.Type.Flag as Flag
 import qualified Zippy.Type.Json as Json
 import qualified Zippy.Type.Mode as Mode
+import qualified Zippy.Type.Option as Option
 import qualified Zippy.Type.Result as Result
 
 main :: IO ()
@@ -48,11 +49,11 @@ mainWith name arguments = do
     putStrLn version
     Exit.exitSuccess
 
-  config <- either die pure $ Config.fromFlags flags
+  config <- Result.result die pure $ Config.fromFlags flags
 
   input <- case Config.input config of
-    Nothing -> ByteString.getContents
-    Just filePath -> ByteString.readFile filePath
+    Option.None -> ByteString.getContents
+    Option.Some filePath -> ByteString.readFile filePath
 
   output <- case Config.determineMode config of
     Mode.Decode -> do
@@ -64,8 +65,8 @@ mainWith name arguments = do
       pure $ Replay.encode replay
 
   case Config.output config of
-    Nothing -> Builder.hPutBuilder IO.stdout output
-    Just filePath -> LazyByteString.writeFile filePath $ Builder.toLazyByteString output
+    Option.None -> Builder.hPutBuilder IO.stdout output
+    Option.Some filePath -> LazyByteString.writeFile filePath $ Builder.toLazyByteString output
 
 die :: String -> IO a
 die message = do

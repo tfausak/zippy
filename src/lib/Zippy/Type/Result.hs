@@ -5,6 +5,20 @@ data Result a b
   | Pass b
   deriving (Eq, Show)
 
+instance Functor (Result a) where
+  fmap f = result Fail $ Pass . f
+
+instance Applicative (Result a) where
+  pure = Pass
+
+  rf <*> rx = case (rf, rx) of
+    (Fail e, _) -> Fail e
+    (_, Fail e) -> Fail e
+    (Pass f, Pass x) -> Pass $ f x
+
+instance Monad (Result a) where
+  r >>= f = result Fail f r
+
 fromEither :: Either a b -> Result a b
 fromEither = either Fail Pass
 
