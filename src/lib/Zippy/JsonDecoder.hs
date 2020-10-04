@@ -29,6 +29,12 @@ object f = Decoder.Decoder $ \ s u -> case s of
   _ -> pure . Result.Fail . Pair.Pair List.Empty $
     "expected object, got " <> show s
 
+optional :: Json.Object -> String -> JsonDecoder a -> JsonDecoder (Option.Option a)
+optional o k d = case List.find (Text.pack k) o of
+  Option.None -> pure Option.None
+  Option.Some Json.Null -> pure Option.None
+  Option.Some x -> Result.result fail (pure . Option.Some) $ run d x
+
 required :: Json.Object -> String -> JsonDecoder a -> JsonDecoder a
 required o k d = case List.find (Text.pack k) o of
   Option.None -> fail $ "missing required key: " <> show k

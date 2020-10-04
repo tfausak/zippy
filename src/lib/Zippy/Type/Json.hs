@@ -87,7 +87,7 @@ decodeNumber = do
   bytes <- ByteDecoder.munch $ \ x -> 0x30 <= x && x <= 0x39 || x == 0x2e
   decodeBlankSpaces
   case Read.readMaybe . Text.unpack $ Text.decodeUtf8 bytes of
-    Nothing -> Applicative.empty
+    Nothing -> fail $ "decodeNumber: " <> show bytes
     Just x -> pure $ Number x
 
 decodeString :: ByteDecoder.ByteDecoder Json
@@ -201,4 +201,4 @@ encodePair (Pair.Pair k v) = encodeString k <> Builder.string7 ": " <> encode v
 encodeObjectHelper :: Object -> Builder.Builder
 encodeObjectHelper xs = case xs of
   List.Empty -> Builder.string7 " }"
-  List.Node x ys -> encodePair x <> Builder.string7 ",\n" <> encodeObjectHelper ys
+  List.Node x ys -> Builder.string7 ",\n" <> encodePair x <> encodeObjectHelper ys
