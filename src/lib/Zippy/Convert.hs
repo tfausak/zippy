@@ -62,9 +62,9 @@ toBounded
   => (b -> a) -> a -> m b
 toBounded f x =
   let lo = f minBound in if x < lo then
-    fail $ "too small (" <> show x <> " < " <> show lo <> ")"
+    Fail.fail $ "too small (" <> show x <> " < " <> show lo <> ")"
   else let hi = f maxBound in if x > hi then
-    fail $ "too large (" <> show x <> " > " <> show hi <> ")"
+    Fail.fail $ "too large (" <> show x <> " > " <> show hi <> ")"
   else
     pure $ round x
 

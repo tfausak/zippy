@@ -2,6 +2,7 @@ module Zippy.Type.Json where
 
 import qualified Control.Applicative as Applicative
 import qualified Control.Monad as Monad
+import qualified Control.Monad.Fail as Fail
 import qualified Data.Bool as Bool
 import qualified Data.ByteString.Builder as Builder
 import qualified Data.ByteString.Builder.Prim as B
@@ -64,7 +65,12 @@ decodeSymbol string = do
 decodeChar :: Char -> ByteDecoder.ByteDecoder ()
 decodeChar expected = do
   actual <- ByteDecoder.word8
-  Monad.guard $ fromIntegral (fromEnum expected) == actual
+  Monad.when (fromIntegral (fromEnum expected) /= actual)
+    . Fail.fail
+    $ "expected "
+    <> show expected
+    <> " but got "
+    <> show (toEnum (fromIntegral actual) :: Char)
 
 decodeBoolean :: ByteDecoder.ByteDecoder Json
 decodeBoolean = decodeFalse Applicative.<|> decodeTrue
@@ -84,7 +90,7 @@ decodeNumber = do
   bytes <- ByteDecoder.munch $ \ x -> 0x30 <= x && x <= 0x39 || x == 0x2e || x == 0x2d
   decodeBlankSpaces
   case Read.readMaybe . Text.unpack $ Text.decodeUtf8 bytes of
-    Nothing -> fail $ "decodeNumber: " <> show bytes
+    Nothing -> Fail.fail $ "decodeNumber: " <> show bytes
     Just x -> pure $ Number x
 
 decodeString :: ByteDecoder.ByteDecoder Json

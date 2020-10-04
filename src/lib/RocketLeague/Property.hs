@@ -1,5 +1,6 @@
 module RocketLeague.Property where
 
+import qualified Control.Monad.Fail as Fail
 import qualified Data.Text as Text
 import qualified RocketLeague.Array as Array
 import qualified RocketLeague.Boolean as Boolean
@@ -45,7 +46,7 @@ instance FromJson.FromJson Property where
       "Name" -> fmap Name $ FromJson.required object "val"
       "QWord" -> fmap QWord $ FromJson.required object "val"
       "Str" -> fmap Str $ FromJson.required object "val"
-      _ -> fail $ "unknown tag: " <> show tag
+      _ -> Fail.fail $ "unknown tag: " <> show tag
 
 instance ToBytes.ToBytes Property where
   toBytes x = (ToBytes.toBytes . Str.Str $ toTag x)
@@ -104,4 +105,4 @@ fromBytesWith kind _ = case Str.toString kind of
   "NameProperty" -> fmap Name FromBytes.fromBytes
   "QWordProperty" -> fmap QWord FromBytes.fromBytes
   "StrProperty" -> fmap Str FromBytes.fromBytes
-  _ -> fail $ "unknown kind: " <> show kind
+  _ -> Fail.fail $ "unknown kind: " <> show kind

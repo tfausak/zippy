@@ -19,7 +19,6 @@ import qualified Zippy.Class.ToJson as ToJson
 import qualified Zippy.Type.Config as Config
 import qualified Zippy.Type.Decoder as Decoder
 import qualified Zippy.Type.Flag as Flag
-import qualified Zippy.Type.Json as Json
 import qualified Zippy.Type.Mode as Mode
 import qualified Zippy.Type.Option as Option
 import qualified Zippy.Type.Result as Result
@@ -62,9 +61,9 @@ mainWith name arguments = do
   output <- case Config.determineMode config of
     Mode.Decode -> do
       replay <- Result.result die pure $ Decoder.runSimple FromBytes.fromBytes input
-      pure . Json.encode $ ToJson.toJson (replay :: Replay.Replay Stream.Stream)
+      pure . ToBytes.toBytes $ ToJson.toJson (replay :: Replay.Replay Stream.Stream)
     Mode.Encode -> do
-      json <- Result.result die pure $ Decoder.runSimple Json.decode input
+      json <- Result.result die pure $ Decoder.runSimple FromBytes.fromBytes input
       replay <- Result.result die pure $ Decoder.runSimple FromJson.fromJson json
       pure $ ToBytes.toBytes (replay :: Replay.Replay Stream.Stream)
 

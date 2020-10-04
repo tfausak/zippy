@@ -4,6 +4,7 @@ import qualified Data.Bool as Bool
 import qualified Data.ByteString.Builder as Builder
 import qualified Data.Int as Int
 import qualified Data.Word as Word
+import qualified Zippy.Type.Json as Json
 import qualified Zippy.Type.List as List
 import qualified Zippy.Type.Option as Option
 import qualified Zippy.Type.Pair as Pair
@@ -25,6 +26,9 @@ instance ToBytes Int.Int16 where
 
 instance ToBytes Int.Int32 where
   toBytes = Builder.int32LE
+
+instance ToBytes Json.Json where
+  toBytes = Json.encode
 
 instance ToBytes a => ToBytes (List.List a) where
   toBytes = foldMap toBytes . List.toList

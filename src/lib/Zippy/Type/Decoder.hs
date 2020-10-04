@@ -42,7 +42,7 @@ instance Monad m => Fail.MonadFail (Decoder s u m) where
   fail e = Decoder $ \ _ _ -> pure . Result.Fail $ Pair.Pair List.Empty e
 
 instance Monad m => Applicative.Alternative (Decoder s u m) where
-  empty = fail "empty"
+  empty = Fail.fail "empty"
 
   dx <|> dy = Decoder $ \ s u -> do
     r <- run dx s u

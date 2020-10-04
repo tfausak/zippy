@@ -4,6 +4,7 @@ import qualified Data.Int as Int
 import qualified Data.Word as Word
 import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Convert as Convert
+import qualified Zippy.Type.Json as Json
 import qualified Zippy.Type.Pair as Pair
 
 class FromBytes a where
@@ -29,6 +30,9 @@ instance FromBytes Int.Int32 where
     lo <- fromBytes
     hi <- fromBytes
     pure $ Convert.combine Convert.int16ToInt32 16 lo hi
+
+instance FromBytes Json.Json where
+  fromBytes = Json.decode
 
 instance (FromBytes a, FromBytes b) => FromBytes (Pair.Pair a b) where
   fromBytes = do

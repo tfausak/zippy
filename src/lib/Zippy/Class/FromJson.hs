@@ -1,5 +1,6 @@
 module Zippy.Class.FromJson where
 
+import qualified Control.Monad.Fail as Fail
 import qualified Data.Int as Int
 import qualified Data.Text as Text
 import qualified Data.Word as Word
@@ -66,35 +67,35 @@ instance FromJson Word.Word32 where
   fromJson = number Convert.doubleToWord32
 
 instance FromJson Word.Word64 where
-  fromJson = string $ either fail pure . Read.readEither . Text.unpack
+  fromJson = string $ either Fail.fail pure . Read.readEither . Text.unpack
 
 array :: (Json.Array -> JsonDecoder.JsonDecoder a) -> JsonDecoder.JsonDecoder a
 array f = do
   j <- Decoder.get
   case j of
     Json.Array x -> f x
-    _ -> fail $ "expected array but got " <> show j
+    _ -> Fail.fail $ "expected array but got " <> show j
 
 boolean :: (Bool -> JsonDecoder.JsonDecoder a) -> JsonDecoder.JsonDecoder a
 boolean f = do
   j <- Decoder.get
   case j of
     Json.Boolean x -> f x
-    _ -> fail $ "expected boolean but got " <> show j
+    _ -> Fail.fail $ "expected boolean but got " <> show j
 
 number :: (Double -> JsonDecoder.JsonDecoder a) -> JsonDecoder.JsonDecoder a
 number f = do
   j <- Decoder.get
   case j of
     Json.Number x -> f x
-    _ -> fail $ "expected number but got " <> show j
+    _ -> Fail.fail $ "expected number but got " <> show j
 
 object :: (Json.Object -> JsonDecoder.JsonDecoder a) -> JsonDecoder.JsonDecoder a
 object f = do
   j <- Decoder.get
   case j of
     Json.Object x -> f x
-    _ -> fail $ "expected object but got " <> show j
+    _ -> Fail.fail $ "expected object but got " <> show j
 
 optional :: FromJson a => Json.Object -> String -> JsonDecoder.JsonDecoder (Option.Option a)
 optional o k = case List.find (Text.pack k) o of
@@ -103,7 +104,7 @@ optional o k = case List.find (Text.pack k) o of
 
 required :: FromJson a => Json.Object -> String -> JsonDecoder.JsonDecoder a
 required o k = case List.find (Text.pack k) o of
-  Option.None -> fail $ "missing required key " <> show k
+  Option.None -> Fail.fail $ "missing required key " <> show k
   Option.Some j -> Decoder.embed fromJson j ()
 
 string :: (Text.Text -> JsonDecoder.JsonDecoder a) -> JsonDecoder.JsonDecoder a
@@ -111,4 +112,4 @@ string f = do
   j <- Decoder.get
   case j of
     Json.String x -> f x
-    _ -> fail $ "expected string but got " <> show j
+    _ -> Fail.fail $ "expected string but got " <> show j
