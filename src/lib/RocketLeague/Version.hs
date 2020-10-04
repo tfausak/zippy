@@ -3,6 +3,7 @@ module RocketLeague.Version where
 import qualified Data.ByteString.Builder as Builder
 import qualified RocketLeague.U32 as U32
 import qualified Zippy.ByteDecoder as ByteDecoder
+import qualified Zippy.Class.FromJson as FromJson
 import qualified Zippy.JsonDecoder as JsonDecoder
 import qualified Zippy.Type.Json as Json
 import qualified Zippy.Type.Option as Option
@@ -12,6 +13,13 @@ data Version = Version
   , minor :: U32.U32
   , patch :: Option.Option U32.U32
   } deriving (Eq, Show)
+
+instance FromJson.FromJson Version where
+  fromJson = JsonDecoder.object $ \ object -> do
+    major <- JsonDecoder.required object "major" FromJson.fromJson
+    minor <- JsonDecoder.required object "minor" FromJson.fromJson
+    patch <- JsonDecoder.optional object "patch" FromJson.fromJson
+    pure Version { major, minor, patch }
 
 decode :: ByteDecoder.ByteDecoder Version
 decode = ByteDecoder.label "Version" $ do
@@ -27,13 +35,6 @@ encode :: Version -> Builder.Builder
 encode version = U32.encode (major version)
   <> U32.encode (minor version)
   <> Option.option mempty U32.encode (patch version)
-
-fromJson :: JsonDecoder.JsonDecoder Version
-fromJson = JsonDecoder.object $ \ object -> do
-  major <- JsonDecoder.required object "major" U32.fromJson
-  minor <- JsonDecoder.required object "minor" U32.fromJson
-  patch <- JsonDecoder.optional object "patch" U32.fromJson
-  pure Version { major, minor, patch }
 
 toJson :: Version -> Json.Json
 toJson version = Json.object

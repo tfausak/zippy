@@ -46,6 +46,7 @@ library
     RocketLeague.U8
     RocketLeague.Version
     Zippy.ByteDecoder
+    Zippy.Class.FromJson
     Zippy.Convert
     Zippy.JsonDecoder
     Zippy.Main

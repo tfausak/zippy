@@ -12,6 +12,7 @@ import qualified System.Environment as Environment
 import qualified System.Exit as Exit
 import qualified System.IO as IO
 import qualified Zippy.ByteDecoder as ByteDecoder
+import qualified Zippy.Class.FromJson as FromJson
 import qualified Zippy.JsonDecoder as JsonDecoder
 import qualified Zippy.Type.Config as Config
 import qualified Zippy.Type.Flag as Flag
@@ -61,7 +62,7 @@ mainWith name arguments = do
       pure . Json.encode $ Replay.toJson replay
     Mode.Encode -> do
       json <- Result.result die pure $ ByteDecoder.run Json.decode input
-      replay <- Result.result die pure $ JsonDecoder.run Replay.fromJson json
+      replay <- Result.result die pure $ JsonDecoder.run FromJson.fromJson json
       pure $ Replay.encode replay
 
   case Config.output config of

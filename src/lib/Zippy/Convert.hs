@@ -13,6 +13,9 @@ doubleToWord8 = toBounded word8ToDouble
 doubleToWord16 :: Fail.MonadFail m => Double -> m Word.Word16
 doubleToWord16 = toBounded word16ToDouble
 
+doubleToWord32 :: Fail.MonadFail m => Double -> m Word.Word32
+doubleToWord32 = toBounded word32ToDouble
+
 toBounded
   :: (Fail.MonadFail m, RealFrac a, Show a, Bounded b, Integral b)
   => (b -> a) -> a -> m b
