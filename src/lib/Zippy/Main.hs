@@ -17,6 +17,7 @@ import qualified Zippy.Type.Config as Config
 import qualified Zippy.Type.Flag as Flag
 import qualified Zippy.Type.Json as Json
 import qualified Zippy.Type.Mode as Mode
+import qualified Zippy.Type.Result as Result
 
 main :: IO ()
 main = do
@@ -30,24 +31,24 @@ mainWith name arguments = do
     (flags, parameters, options, problems) =
       Console.getOpt' Console.Permute descriptions arguments
 
-  Monad.forM_ options (\ option -> IO.hPutStrLn IO.stderr
-    ("WARNING: unknown option `" <> option <> "'"))
+  Monad.forM_ options $ \ option -> IO.hPutStrLn IO.stderr $
+    "WARNING: unknown option `" <> option <> "'"
 
-  Monad.forM_ parameters (\ parameter -> IO.hPutStrLn IO.stderr
-    ("WARNING: unexpected parameter `" <> parameter <> "'"))
+  Monad.forM_ parameters $ \ parameter -> IO.hPutStrLn IO.stderr $
+    "WARNING: unexpected parameter `" <> parameter <> "'"
 
-  mapM_ (IO.hPutStr IO.stderr . mappend "ERROR: ") problems
+  Monad.forM_ problems $ IO.hPutStr IO.stderr . mappend "ERROR: "
   Monad.unless (null problems) Exit.exitFailure
 
-  Monad.when (elem Flag.Help flags) (do
-    putStr (Console.usageInfo (unwords [name, "version", version]) descriptions)
-    Exit.exitSuccess)
+  Monad.when (elem Flag.Help flags) $ do
+    putStr $ Console.usageInfo (unwords [name, "version", version]) descriptions
+    Exit.exitSuccess
 
-  Monad.when (elem Flag.Version flags) (do
+  Monad.when (elem Flag.Version flags) $ do
     putStrLn version
-    Exit.exitSuccess)
+    Exit.exitSuccess
 
-  config <- either die pure (Config.fromFlags flags)
+  config <- either die pure $ Config.fromFlags flags
 
   input <- case Config.input config of
     Nothing -> ByteString.getContents
@@ -55,20 +56,20 @@ mainWith name arguments = do
 
   output <- case Config.determineMode config of
     Mode.Decode -> do
-      replay <- either die pure (ByteDecoder.run Replay.decode input)
-      pure (Json.encode (Replay.toJson replay))
+      replay <- Result.result die pure $ ByteDecoder.run Replay.decode input
+      pure . Json.encode $ Replay.toJson replay
     Mode.Encode -> do
-      json <- either die pure (ByteDecoder.run Json.decode input)
-      replay <- either die pure (JsonDecoder.run Replay.fromJson json)
-      pure (Replay.encode replay)
+      json <- Result.result die pure $ ByteDecoder.run Json.decode input
+      replay <- Result.result die pure $ JsonDecoder.run Replay.fromJson json
+      pure $ Replay.encode replay
 
   case Config.output config of
     Nothing -> Builder.hPutBuilder IO.stdout output
-    Just filePath -> LazyByteString.writeFile filePath (Builder.toLazyByteString output)
+    Just filePath -> LazyByteString.writeFile filePath $ Builder.toLazyByteString output
 
 die :: String -> IO a
 die message = do
-  IO.hPutStrLn IO.stderr ("ERROR: " <> message)
+  IO.hPutStrLn IO.stderr $ "ERROR: " <> message
   Exit.exitFailure
 
 version :: String

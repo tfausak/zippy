@@ -12,19 +12,19 @@ data Replay = Replay
   } deriving (Eq, Show)
 
 decode :: ByteDecoder.ByteDecoder Replay
-decode = ByteDecoder.label "Replay" (do
-  theHeader <- ByteDecoder.label "header" (Section.decode Header.decode)
-  pure Replay { header = theHeader })
+decode = ByteDecoder.label "Replay" $ do
+  header <- ByteDecoder.label "header" $ Section.decode Header.decode
+  pure Replay { header }
 
 encode :: Replay -> Builder.Builder
 encode replay = Section.encode Header.encode (header replay)
 
 fromJson :: JsonDecoder.JsonDecoder Replay
-fromJson = JsonDecoder.object (\ object -> do
-  theHeader <- JsonDecoder.required "header" object (Section.fromJson Header.fromJson)
-  pure Replay { header = theHeader })
+fromJson = JsonDecoder.object $ \ object -> do
+  header <- JsonDecoder.required object "header" $ Section.fromJson Header.fromJson
+  pure Replay { header }
 
 toJson :: Replay -> Json.Json
 toJson replay = Json.object
-  [ ("header", Section.toJson Header.toJson (header replay))
+  [ ("header", Section.toJson Header.toJson $ header replay)
   ]

@@ -26,18 +26,18 @@ withFlag config flag = case flag of
   Flag.Help -> Right config
   Flag.Input filePath -> Right config { input = Just filePath }
   Flag.Mode string -> do
-    theMode <- Mode.fromString string
-    Right config { mode = Just theMode }
+    mode <- Mode.fromString string
+    Right config { mode = Just mode }
   Flag.Output filePath -> Right config { output = Just filePath }
   Flag.Version -> Right config
 
 determineMode :: Config -> Mode.Mode
 determineMode config = case mode config of
-  Just theMode -> theMode
-  Nothing -> case fmap FilePath.takeExtension (input config) of
+  Just mode -> mode
+  Nothing -> case fmap FilePath.takeExtension $ input config of
     Just ".json" -> Mode.Encode
     Just ".replay" -> Mode.Decode
-    _ -> case fmap FilePath.takeExtension (output config) of
+    _ -> case fmap FilePath.takeExtension $ output config of
       Just ".json" -> Mode.Decode
       Just ".replay" -> Mode.Encode
       _ -> Mode.Decode

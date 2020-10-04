@@ -11,11 +11,11 @@ newtype Section a = Section
   } deriving (Eq, Show)
 
 decode :: ByteDecoder.ByteDecoder a -> ByteDecoder.ByteDecoder (Section a)
-decode decodeValue = ByteDecoder.label "Section" (do
+decode decodeValue = ByteDecoder.label "Section" $ do
   _size <- ByteDecoder.label "size" U32.decode
   _crc <- ByteDecoder.label "crc" U32.decode
-  theValue <- ByteDecoder.label "value" decodeValue
-  pure Section { value = theValue })
+  value <- ByteDecoder.label "value" decodeValue
+  pure Section { value }
 
 encode :: (a -> Builder.Builder) -> Section a -> Builder.Builder
 encode f = f . value

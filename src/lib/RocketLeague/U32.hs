@@ -1,6 +1,5 @@
 module RocketLeague.U32 where
 
-import qualified Data.Bits as Bits
 import qualified Data.ByteString.Builder as Builder
 import qualified Data.Word as Word
 import qualified RocketLeague.U16 as U16
@@ -14,21 +13,16 @@ newtype U32 = U32
   } deriving (Eq, Show)
 
 decode :: ByteDecoder.ByteDecoder U32
-decode = ByteDecoder.label "U32" (do
+decode = ByteDecoder.label "U32" $ do
   lo <- U16.decode
   hi <- U16.decode
-  pure (fromU16s lo hi))
-
-fromU16s :: U16.U16 -> U16.U16 -> U32
-fromU16s lo hi = U32 $
-  Bits.shift (Convert.word16ToWord32 (U16.value hi)) 16 Bits..|.
-  Convert.word16ToWord32 (U16.value lo)
+  pure . U32 $ Convert.combine (Convert.word16ToWord32 . U16.value) 16 lo hi
 
 encode :: U32 -> Builder.Builder
 encode = Builder.word32LE . value
 
 fromJson :: JsonDecoder.JsonDecoder U32
-fromJson = JsonDecoder.number (pure . U32 . round)
+fromJson = JsonDecoder.number $ pure . U32 . round
 
 toJson :: U32 -> Json.Json
 toJson = Json.Number . Convert.word32ToDouble . value

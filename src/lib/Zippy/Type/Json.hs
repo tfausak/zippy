@@ -9,6 +9,7 @@ import qualified Data.ByteString.Builder.Prim as B
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Word as Word
+import qualified Text.Read as Read
 import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Type.List as List
 import qualified Zippy.Type.Pair as Pair
@@ -26,12 +27,6 @@ type Array = List.List Json
 
 type Object = List.List (Pair.Pair Text.Text Json)
 
-string :: String -> Json
-string = String . Text.pack
-
-array :: [Json] -> Json
-array = Array . List.fromList
-
 object :: [(String, Json)] -> Json
 object = Object . List.fromList . fmap (Pair.fromTuple . Bifunctor.first Text.pack)
 
@@ -45,10 +40,10 @@ decodeBlankSpaces = Monad.void (ByteDecoder.munch isBlankSpace)
 
 isBlankSpace :: Word.Word8 -> Bool
 isBlankSpace byte = case byte of
-  0x09 -> True -- horizontal tab
-  0x0a -> True -- new line
-  0x0d -> True -- carriage ret
-  0x20 -> True -- space
+  0x09 -> True -- '\t'
+  0x0a -> True -- '\n'
+  0x0d -> True -- '\r'
+  0x20 -> True -- ' '
   _ -> False
 
 decodeJson :: ByteDecoder.ByteDecoder Json
@@ -65,15 +60,14 @@ decodeNull = do
   pure Null
 
 decodeSymbol :: String -> ByteDecoder.ByteDecoder ()
-decodeSymbol x = do
-  Monad.void (mapM_ decodeChar x)
+decodeSymbol string = do
+  Monad.void $ mapM_ decodeChar string
   decodeBlankSpaces
 
 decodeChar :: Char -> ByteDecoder.ByteDecoder ()
-decodeChar x = do
-  y <- ByteDecoder.word8
-  Monad.when (fromIntegral (fromEnum x) /= y)
-    (fail ("expected " <> show x <> " but got " <> show y))
+decodeChar expected = do
+  actual <- ByteDecoder.word8
+  Monad.guard $ fromIntegral (fromEnum expected) == actual
 
 decodeBoolean :: ByteDecoder.ByteDecoder Json
 decodeBoolean = decodeFalse Applicative.<|> decodeTrue
@@ -81,57 +75,63 @@ decodeBoolean = decodeFalse Applicative.<|> decodeTrue
 decodeFalse :: ByteDecoder.ByteDecoder Json
 decodeFalse = do
   decodeSymbol "false"
-  pure (Boolean False)
+  pure $ Boolean False
 
 decodeTrue :: ByteDecoder.ByteDecoder Json
 decodeTrue = do
   decodeSymbol "true"
-  pure (Boolean True)
+  pure $ Boolean True
 
 decodeNumber :: ByteDecoder.ByteDecoder Json
 decodeNumber = do
-  xs <- ByteDecoder.munch (\ x -> 0x30 <= x && x <= 0x39 || x == 0x2e)
+  bytes <- ByteDecoder.munch $ \ x -> 0x30 <= x && x <= 0x39 || x == 0x2e
   decodeBlankSpaces
-  let ys = Text.unpack (Text.decodeUtf8 xs)
-  if null ys
-    then fail "empty"
-    else pure (Number (read ys))
+  case Read.readMaybe . Text.unpack $ Text.decodeUtf8 bytes of
+    Nothing -> Applicative.empty
+    Just x -> pure $ Number x
 
 decodeString :: ByteDecoder.ByteDecoder Json
-decodeString = do
-  x <- decodeText
-  pure (String x)
+decodeString = fmap String decodeText
 
 decodeText :: ByteDecoder.ByteDecoder Text.Text
 decodeText = decodeBetween (decodeSymbol "\"") (decodeSymbol "\"")
-  (fmap Text.decodeUtf8 (ByteDecoder.munch (/= 0x22)))
+  . fmap Text.decodeUtf8
+  $ ByteDecoder.munch (/= 0x22)
 
 decodeArray :: ByteDecoder.ByteDecoder Json
-decodeArray = do
-  elements <- decodeBetween (decodeSymbol "[") (decodeSymbol "]")
-    (decodeSeparated (decodeSymbol ",") decodeJson)
-  pure (Array elements)
+decodeArray = fmap Array
+  . decodeBetween (decodeSymbol "[") (decodeSymbol "]")
+  $ decodeSeparated (decodeSymbol ",") decodeJson
 
 decodeObject :: ByteDecoder.ByteDecoder Json
-decodeObject = do
-  pairs <- decodeBetween (decodeSymbol "{") (decodeSymbol "}")
-    (decodeSeparated (decodeSymbol ",") decodePair)
-  pure (Object pairs)
+decodeObject = fmap Object
+    . decodeBetween (decodeSymbol "{") (decodeSymbol "}")
+    $ decodeSeparated (decodeSymbol ",") decodePair
 
-decodeBetween :: ByteDecoder.ByteDecoder l -> ByteDecoder.ByteDecoder r -> ByteDecoder.ByteDecoder a -> ByteDecoder.ByteDecoder a
+decodeBetween
+  :: ByteDecoder.ByteDecoder l
+  -> ByteDecoder.ByteDecoder r
+  -> ByteDecoder.ByteDecoder a
+  -> ByteDecoder.ByteDecoder a
 decodeBetween l r d = do
   Monad.void l
   x <- d
   Monad.void r
   pure x
 
-decodeSeparated :: ByteDecoder.ByteDecoder s -> ByteDecoder.ByteDecoder a -> ByteDecoder.ByteDecoder (List.List a)
-decodeSeparated s d = do
-  x <- d
-  xs <- decodeSome (do
-    Monad.void s
-    d)
-  pure (List.Node x xs)
+decodeSeparated
+  :: ByteDecoder.ByteDecoder s
+  -> ByteDecoder.ByteDecoder a
+  -> ByteDecoder.ByteDecoder (List.List a)
+decodeSeparated s d =
+  let
+    many = do
+      x <- d
+      xs <- decodeSome $ do
+        Monad.void s
+        d
+      pure $ List.Node x xs
+  in many Applicative.<|> pure List.Empty
 
 decodeSome :: ByteDecoder.ByteDecoder a -> ByteDecoder.ByteDecoder (List.List a)
 decodeSome d = decodeMany d Applicative.<|> pure List.Empty
@@ -140,14 +140,14 @@ decodeMany :: ByteDecoder.ByteDecoder a -> ByteDecoder.ByteDecoder (List.List a)
 decodeMany d = do
   x <- d
   xs <- decodeSome d
-  pure (List.Node x xs)
+  pure $ List.Node x xs
 
 decodePair :: ByteDecoder.ByteDecoder (Pair.Pair Text.Text Json)
 decodePair = do
   k <- decodeText
   decodeSymbol ":"
   v <- decodeJson
-  pure (Pair.Pair k v)
+  pure $ Pair.Pair k v
 
 encode :: Json -> Builder.Builder
 encode json = case json of

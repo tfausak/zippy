@@ -11,27 +11,34 @@ import qualified Zippy
 
 main :: IO ()
 main = do
-  (allocations, (duration, ())) <- withAllocations (withDuration
-    (mapM_ test replays))
-  Printf.printf "total allocations: %s bytes, duration: %s nanoseconds\n"
-    (format allocations) (format duration)
+  (allocations, (duration, _)) <- withAllocations . withDuration $
+    mapM_ test replays
+
+  Printf.printf
+    "total allocations: %s bytes, duration: %s nanoseconds\n"
+    (format allocations)
+    (format duration)
 
 test :: String -> IO ()
 test replay = do
   let input = "replays/" <> replay <> ".replay"
   size <- Directory.getFileSize input
   Printf.printf "%s input %s bytes\n" replay (format size)
-  withTemporaryFile ".json" (\ json -> do
+
+  withTemporaryFile ".json" $ \ json -> do
     do
       (allocations, duration) <- zippy input json
       Printf.printf
         "  decode allocations: %s bytes, duration: %s nanoseconds\n"
-        (format allocations) (format duration)
-    withTemporaryFile ".replay" (\ output -> do
+        (format allocations)
+        (format duration)
+
+    withTemporaryFile ".replay" $ \ output -> do
       (allocations, duration) <- zippy json output
       Printf.printf
         "  encode allocations: %s bytes, duration: %s nanoseconds\n"
-        (format allocations) (format duration)))
+        (format allocations)
+        (format duration)
 
 format :: Show a => a -> String
 format = reverse . List.intercalate "," . chunksOf 3 . reverse . show
@@ -43,8 +50,8 @@ chunksOf n xs = case splitAt n xs of
 
 zippy :: FilePath -> FilePath -> IO (Int.Int64, Word.Word64)
 zippy input output = do
-  (allocations, (duration, ())) <- withAllocations (withDuration
-    (Zippy.mainWith "zippy" ["--input", input, "--output", output]))
+  (allocations, (duration, _)) <- withAllocations . withDuration $
+    Zippy.mainWith "zippy" ["--input", input, "--output", output]
   pure (allocations, duration)
 
 withAllocations :: IO a -> IO (Int.Int64, a)

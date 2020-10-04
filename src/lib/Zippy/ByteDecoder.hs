@@ -10,16 +10,22 @@ import qualified Zippy.Type.Result as Result
 
 type ByteDecoder = Decoder.Decoder ByteString.ByteString () Identity.Identity
 
-run :: ByteDecoder a -> ByteString.ByteString -> Either String a
-run d s = case Identity.runIdentity (Decoder.run d s ()) of
-  Result.Fail p -> Left (show p)
-  Result.Pass (Pair.Pair _ x) -> Right x
+run :: ByteDecoder a -> ByteString.ByteString -> Result.Result String a
+run = Decoder.runSimple
 
 count :: Int -> ByteDecoder ByteString.ByteString
-count n = Decoder.Decoder $ \ s1 _ -> if n > ByteString.length s1
-  then pure (Result.Fail (Pair.Pair List.Empty "not enough input"))
-  else let (x, s2) = ByteString.splitAt n s1
-    in pure (Result.Pass (Pair.Pair s2 x))
+count n = Decoder.Decoder $ \ s1 _ ->
+  let size = ByteString.length s1 in if n > size then
+    pure
+      . Result.Fail
+      . Pair.Pair List.Empty
+      $ "not enough input (wanted "
+      <> show n
+      <> " but have "
+      <> show size
+      <> ")"
+  else let (x, s2) = ByteString.splitAt n s1 in
+    pure . Result.Pass $ Pair.Pair s2 x
 
 label :: String -> ByteDecoder a -> ByteDecoder a
 label = Decoder.label
@@ -27,7 +33,7 @@ label = Decoder.label
 munch :: (Word.Word8 -> Bool) -> ByteDecoder ByteString.ByteString
 munch f = Decoder.Decoder $ \ s1 _ ->
   let (x, s2) = ByteString.span f s1
-  in pure (Result.Pass (Pair.Pair s2 x))
+  in pure . Result.Pass $ Pair.Pair s2 x
 
 word8 :: ByteDecoder Word.Word8
-word8 = fmap ByteString.head (count 1)
+word8 = fmap ByteString.head $ count 1

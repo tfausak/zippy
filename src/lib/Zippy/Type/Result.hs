@@ -8,7 +8,10 @@ data Result a b
 fromEither :: Either a b -> Result a b
 fromEither = either Fail Pass
 
+result :: (a -> c) -> (b -> c) -> Result a b -> c
+result f g x = case x of
+  Fail y -> f y
+  Pass y -> g y
+
 toEither :: Result a b -> Either a b
-toEither x = case x of
-  Fail y -> Left y
-  Pass y -> Right y
+toEither = result Left Right

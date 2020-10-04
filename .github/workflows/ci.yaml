@@ -35,3 +35,4 @@ jobs:
             ${{ matrix.os }}-${{ matrix.ghc }}-${{ matrix.cabal }}-
             ${{ matrix.os }}-${{ matrix.ghc }}-
       - run: cabal test
+      - run: cabal check

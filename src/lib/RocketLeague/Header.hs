@@ -11,19 +11,19 @@ data Header = Header
   } deriving (Eq, Show)
 
 decode :: ByteDecoder.ByteDecoder Header
-decode = ByteDecoder.label "Header" (do
-  theVersion <- ByteDecoder.label "version" Version.decode
-  pure Header { version = theVersion })
+decode = ByteDecoder.label "Header" $ do
+  version <- ByteDecoder.label "version" Version.decode
+  pure Header { version }
 
 encode :: Header -> Builder.Builder
 encode header = Version.encode (version header)
 
 fromJson :: JsonDecoder.JsonDecoder Header
-fromJson = JsonDecoder.object (\ object -> do
-  theVersion <- JsonDecoder.required "version" object Version.fromJson
-  pure Header { version = theVersion })
+fromJson = JsonDecoder.object $ \ object -> do
+  version <- JsonDecoder.required object "version" Version.fromJson
+  pure Header { version }
 
 toJson :: Header -> Json.Json
 toJson header = Json.object
-  [ ("version", Version.toJson (version header))
+  [ ("version", Version.toJson $ version header)
   ]

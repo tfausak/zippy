@@ -11,19 +11,19 @@ data Version = Version
   } deriving (Eq, Show)
 
 decode :: ByteDecoder.ByteDecoder Version
-decode = ByteDecoder.label "Version" (do
-  theMajor <- ByteDecoder.label "major" U32.decode
-  pure Version { major = theMajor })
+decode = ByteDecoder.label "Version" $ do
+  major <- ByteDecoder.label "major" U32.decode
+  pure Version { major }
 
 encode :: Version -> Builder.Builder
 encode version = U32.encode (major version)
 
 fromJson :: JsonDecoder.JsonDecoder Version
-fromJson = JsonDecoder.object (\ object -> do
-  theMajor <- JsonDecoder.required "major" object U32.fromJson
-  pure Version { major = theMajor })
+fromJson = JsonDecoder.object $ \ object -> do
+  major <- JsonDecoder.required object "major" U32.fromJson
+  pure Version { major }
 
 toJson :: Version -> Json.Json
 toJson version = Json.object
-  [ ("major", U32.toJson (major version))
+  [ ("major", U32.toJson $ major version)
   ]
