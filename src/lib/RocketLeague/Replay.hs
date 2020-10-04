@@ -6,23 +6,21 @@ import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromJson as FromJson
 import qualified Zippy.Class.ToBytes as ToBytes
 import qualified Zippy.Class.ToJson as ToJson
-import qualified Zippy.JsonDecoder as JsonDecoder
-import qualified Zippy.Type.Json as Json
 
 data Replay = Replay
   { header :: Section.Section Header.Header
   } deriving (Eq, Show)
 
 instance FromJson.FromJson Replay where
-  fromJson = JsonDecoder.object $ \ object -> do
-    header <- JsonDecoder.required object "header" FromJson.fromJson
+  fromJson = FromJson.object $ \ object -> do
+    header <- FromJson.required object "header"
     pure Replay { header }
 
 instance ToBytes.ToBytes Replay where
   toBytes replay = ToBytes.toBytes (header replay)
 
 instance ToJson.ToJson Replay where
-  toJson replay = Json.object
+  toJson replay = ToJson.object
     [ ("header", ToJson.toJson $ header replay)
     ]
 

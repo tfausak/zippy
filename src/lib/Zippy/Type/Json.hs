@@ -2,7 +2,6 @@ module Zippy.Type.Json where
 
 import qualified Control.Applicative as Applicative
 import qualified Control.Monad as Monad
-import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Bool as Bool
 import qualified Data.ByteString.Builder as Builder
 import qualified Data.ByteString.Builder.Prim as B
@@ -26,9 +25,6 @@ data Json
 type Array = List.List Json
 
 type Object = List.List (Pair.Pair Text.Text Json)
-
-object :: [(String, Json)] -> Json
-object = Object . List.fromList . fmap (Pair.fromTuple . Bifunctor.first Text.pack)
 
 decode :: ByteDecoder.ByteDecoder Json
 decode = do

@@ -62,10 +62,20 @@ runSimple d s = case Identity.runIdentity $ run d s () of
   Result.Fail p -> Result.Fail $ format p
   Result.Pass (Pair.Pair _ x) -> Result.Pass x
 
+embed :: Monad m => Decoder s u m a -> s -> u -> Decoder s u m a
+embed d s1 u = Decoder $ \ s2 _ -> fmap
+  (\ r -> case r of
+    Result.Fail p -> Result.Fail p
+    Result.Pass (Pair.Pair _ x) -> Result.Pass $ Pair.Pair s2 x)
+  $ run d s1 u
+
 format :: Pair.Pair (List.List String) String -> String
 format (Pair.Pair ls1 e) = case ls1 of
   List.Empty -> e
   List.Node l ls2 -> l <> ": " <> format (Pair.Pair ls2 e)
+
+get :: Applicative m => Decoder s u m s
+get = Decoder $ \ s _ -> pure . Result.Pass $ Pair.Pair s s
 
 label :: Functor m => String -> Decoder s u m a -> Decoder s u m a
 label l d = Decoder $ \ s1 u -> fmap

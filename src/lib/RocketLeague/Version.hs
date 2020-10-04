@@ -5,8 +5,6 @@ import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromJson as FromJson
 import qualified Zippy.Class.ToBytes as ToBytes
 import qualified Zippy.Class.ToJson as ToJson
-import qualified Zippy.JsonDecoder as JsonDecoder
-import qualified Zippy.Type.Json as Json
 import qualified Zippy.Type.Option as Option
 
 data Version = Version
@@ -16,10 +14,10 @@ data Version = Version
   } deriving (Eq, Show)
 
 instance FromJson.FromJson Version where
-  fromJson = JsonDecoder.object $ \ object -> do
-    major <- JsonDecoder.required object "major" FromJson.fromJson
-    minor <- JsonDecoder.required object "minor" FromJson.fromJson
-    patch <- JsonDecoder.optional object "patch" FromJson.fromJson
+  fromJson = FromJson.object $ \ object -> do
+    major <- FromJson.required object "major"
+    minor <- FromJson.required object "minor"
+    patch <- FromJson.optional object "patch"
     pure Version { major, minor, patch }
 
 instance ToBytes.ToBytes Version where
@@ -28,7 +26,7 @@ instance ToBytes.ToBytes Version where
     <> ToBytes.toBytes (patch version)
 
 instance ToJson.ToJson Version where
-  toJson version = Json.object
+  toJson version = ToJson.object
     [ ("major", ToJson.toJson $ major version)
     , ("minor", ToJson.toJson $ minor version)
     , ("patch", ToJson.toJson $ patch version)
