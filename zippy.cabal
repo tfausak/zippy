@@ -35,7 +35,15 @@ library
   hs-source-dirs: src/lib
   other-modules:
     Paths_zippy
+    RocketLeague.Header
     RocketLeague.Replay
+    RocketLeague.Section
+    RocketLeague.U16
+    RocketLeague.U32
+    RocketLeague.U8
+    RocketLeague.Version
+    Zippy.ByteDecoder
+    Zippy.Convert
     Zippy.Main
     Zippy.Type.Config
     Zippy.Type.Decoder

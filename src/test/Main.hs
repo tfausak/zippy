@@ -1,28 +1,45 @@
 import qualified Control.Exception as Exception
 import qualified Data.Int as Int
+import qualified Data.List as List
 import qualified Data.Word as Word
 import qualified GHC.Clock as Clock
 import qualified System.Directory as Directory
 import qualified System.IO as IO
 import qualified System.Mem as Mem
+import qualified Text.Printf as Printf
 import qualified Zippy
 
 main :: IO ()
 main = do
   (allocations, (duration, ())) <- withAllocations (withDuration
     (mapM_ test replays))
-  print (allocations, duration)
+  Printf.printf "total allocations: %s bytes, duration: %s nanoseconds\n"
+    (format allocations) (format duration)
 
 test :: String -> IO ()
 test replay = do
   let input = "replays/" <> replay <> ".replay"
+  size <- Directory.getFileSize input
+  Printf.printf "%s input %s bytes\n" replay (format size)
   withTemporaryFile ".json" (\ json -> do
     do
       (allocations, duration) <- zippy input json
-      print (allocations, duration)
+      Printf.printf
+        "  decode allocations: %s bytes, duration: %s nanoseconds\n"
+        (format allocations) (format duration)
     withTemporaryFile ".replay" (\ output -> do
       (allocations, duration) <- zippy json output
-      print (allocations, duration)))
+      Printf.printf
+        "  encode allocations: %s bytes, duration: %s nanoseconds\n"
+        (format allocations) (format duration)))
+
+format :: Show a => a -> String
+format = reverse . List.intercalate "," . chunksOf 3 . reverse . show
+
+chunksOf :: Int -> [a] -> [[a]]
+chunksOf n xs = case splitAt n xs of
+  ([], _) -> []
+  (ys, zs) -> ys : chunksOf n zs
 
 zippy :: FilePath -> FilePath -> IO (Int.Int64, Word.Word64)
 zippy input output = do
