@@ -1,9 +1,9 @@
 module RocketLeague.Version where
 
-import qualified Data.ByteString.Builder as Builder
 import qualified RocketLeague.U32 as U32
 import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromJson as FromJson
+import qualified Zippy.Class.ToBytes as ToBytes
 import qualified Zippy.Class.ToJson as ToJson
 import qualified Zippy.JsonDecoder as JsonDecoder
 import qualified Zippy.Type.Json as Json
@@ -22,6 +22,11 @@ instance FromJson.FromJson Version where
     patch <- JsonDecoder.optional object "patch" FromJson.fromJson
     pure Version { major, minor, patch }
 
+instance ToBytes.ToBytes Version where
+  toBytes version = ToBytes.toBytes (major version)
+    <> ToBytes.toBytes (minor version)
+    <> ToBytes.toBytes (patch version)
+
 instance ToJson.ToJson Version where
   toJson version = Json.object
     [ ("major", ToJson.toJson $ major version)
@@ -38,8 +43,3 @@ decode = ByteDecoder.label "Version" $ do
     then fmap Option.Some U32.decode
     else pure Option.None
   pure Version { major, minor, patch }
-
-encode :: Version -> Builder.Builder
-encode version = U32.encode (major version)
-  <> U32.encode (minor version)
-  <> Option.option mempty U32.encode (patch version)

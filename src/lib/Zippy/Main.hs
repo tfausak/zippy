@@ -13,6 +13,7 @@ import qualified System.Exit as Exit
 import qualified System.IO as IO
 import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromJson as FromJson
+import qualified Zippy.Class.ToBytes as ToBytes
 import qualified Zippy.Class.ToJson as ToJson
 import qualified Zippy.JsonDecoder as JsonDecoder
 import qualified Zippy.Type.Config as Config
@@ -64,7 +65,7 @@ mainWith name arguments = do
     Mode.Encode -> do
       json <- Result.result die pure $ ByteDecoder.run Json.decode input
       replay <- Result.result die pure $ JsonDecoder.run FromJson.fromJson json
-      pure $ Replay.encode replay
+      pure $ ToBytes.toBytes (replay :: Replay.Replay)
 
   case Config.output config of
     Option.None -> Builder.hPutBuilder IO.stdout output

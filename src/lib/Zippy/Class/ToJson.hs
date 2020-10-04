@@ -9,9 +9,7 @@ class ToJson a where
   toJson :: a -> Json.Json
 
 instance ToJson a => ToJson (Option.Option a) where
-  toJson o = case o of
-    Option.None -> Json.Null
-    Option.Some s -> toJson s
+  toJson = Option.option Json.Null toJson
 
 instance ToJson Word.Word8 where
   toJson = Json.Number . Convert.word8ToDouble

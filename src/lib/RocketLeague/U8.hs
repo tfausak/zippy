@@ -1,9 +1,9 @@
 module RocketLeague.U8 where
 
-import qualified Data.ByteString.Builder as Builder
 import qualified Data.Word as Word
 import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromJson as FromJson
+import qualified Zippy.Class.ToBytes as ToBytes
 import qualified Zippy.Class.ToJson as ToJson
 
 newtype U8 = U8
@@ -13,11 +13,11 @@ newtype U8 = U8
 instance FromJson.FromJson U8 where
   fromJson = fmap U8 FromJson.fromJson
 
+instance ToBytes.ToBytes U8 where
+  toBytes = ToBytes.toBytes . value
+
 instance ToJson.ToJson U8 where
   toJson = ToJson.toJson . value
 
 decode :: ByteDecoder.ByteDecoder U8
 decode = ByteDecoder.label "U8" $ fmap U8 ByteDecoder.word8
-
-encode :: U8 -> Builder.Builder
-encode = Builder.word8 . value

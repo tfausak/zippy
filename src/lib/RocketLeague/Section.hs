@@ -1,9 +1,9 @@
 module RocketLeague.Section where
 
-import qualified Data.ByteString.Builder as Builder
 import qualified RocketLeague.U32 as U32
 import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromJson as FromJson
+import qualified Zippy.Class.ToBytes as ToBytes
 import qualified Zippy.Class.ToJson as ToJson
 
 newtype Section a = Section
@@ -12,6 +12,9 @@ newtype Section a = Section
 
 instance FromJson.FromJson a => FromJson.FromJson (Section a) where
   fromJson = fmap Section FromJson.fromJson
+
+instance ToBytes.ToBytes a => ToBytes.ToBytes (Section a) where
+  toBytes = ToBytes.toBytes . value
 
 instance ToJson.ToJson a => ToJson.ToJson (Section a) where
   toJson = ToJson.toJson . value
@@ -22,6 +25,3 @@ decode decodeValue = ByteDecoder.label "Section" $ do
   _crc <- ByteDecoder.label "crc" U32.decode
   value <- ByteDecoder.label "value" decodeValue
   pure Section { value }
-
-encode :: (a -> Builder.Builder) -> Section a -> Builder.Builder
-encode f = f . value
