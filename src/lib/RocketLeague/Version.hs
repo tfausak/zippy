@@ -1,11 +1,11 @@
 module RocketLeague.Version where
 
 import qualified RocketLeague.U32 as U32
-import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromBytes as FromBytes
 import qualified Zippy.Class.FromJson as FromJson
 import qualified Zippy.Class.ToBytes as ToBytes
 import qualified Zippy.Class.ToJson as ToJson
+import qualified Zippy.Type.Decoder as Decoder
 import qualified Zippy.Type.Option as Option
 
 data Version = Version
@@ -15,10 +15,10 @@ data Version = Version
   } deriving (Eq, Show)
 
 instance FromBytes.FromBytes Version where
-  fromBytes = ByteDecoder.label "Version" $ do
-    major <- ByteDecoder.label "major" FromBytes.fromBytes
-    minor <- ByteDecoder.label "minor" FromBytes.fromBytes
-    patch <- ByteDecoder.label "patch" $
+  fromBytes = Decoder.label "Version" $ do
+    major <- Decoder.label "major" FromBytes.fromBytes
+    minor <- Decoder.label "minor" FromBytes.fromBytes
+    patch <- Decoder.label "patch" $
       if U32.value major >= 868 && U32.value minor >= 18
       then fmap Option.Some FromBytes.fromBytes
       else pure Option.None

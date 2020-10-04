@@ -10,9 +10,6 @@ import qualified Zippy.Type.Result as Result
 
 type ByteDecoder = Decoder.Decoder ByteString.ByteString () Identity.Identity
 
-run :: ByteDecoder a -> ByteString.ByteString -> Result.Result String a
-run = Decoder.runSimple
-
 count :: Int -> ByteDecoder ByteString.ByteString
 count n = Decoder.Decoder $ \ s1 _ ->
   let size = ByteString.length s1 in if n > size then
@@ -26,9 +23,6 @@ count n = Decoder.Decoder $ \ s1 _ ->
       <> ")"
   else let (x, s2) = ByteString.splitAt n s1 in
     pure . Result.Pass $ Pair.Pair s2 x
-
-label :: String -> ByteDecoder a -> ByteDecoder a
-label = Decoder.label
 
 munch :: (Word.Word8 -> Bool) -> ByteDecoder ByteString.ByteString
 munch f = Decoder.Decoder $ \ s1 _ ->

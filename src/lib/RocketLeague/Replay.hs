@@ -2,19 +2,19 @@ module RocketLeague.Replay where
 
 import qualified RocketLeague.Header as Header
 import qualified RocketLeague.Section as Section
-import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromBytes as FromBytes
 import qualified Zippy.Class.FromJson as FromJson
 import qualified Zippy.Class.ToBytes as ToBytes
 import qualified Zippy.Class.ToJson as ToJson
+import qualified Zippy.Type.Decoder as Decoder
 
 data Replay = Replay
   { header :: Section.Section Header.Header
   } deriving (Eq, Show)
 
 instance FromBytes.FromBytes Replay where
-  fromBytes = ByteDecoder.label "Replay" $ do
-    header <- ByteDecoder.label "header" FromBytes.fromBytes
+  fromBytes = Decoder.label "Replay" $ do
+    header <- Decoder.label "header" FromBytes.fromBytes
     pure Replay { header }
 
 instance FromJson.FromJson Replay where
