@@ -40,14 +40,17 @@ library
     Paths_zippy
     RocketLeague.Array
     RocketLeague.Boolean
+    RocketLeague.Content
     RocketLeague.Dictionary
     RocketLeague.F32
     RocketLeague.Header
     RocketLeague.I32
+    RocketLeague.KeyFrame
     RocketLeague.Property
     RocketLeague.Replay
     RocketLeague.Section
     RocketLeague.Str
+    RocketLeague.Stream
     RocketLeague.U16
     RocketLeague.U32
     RocketLeague.U64

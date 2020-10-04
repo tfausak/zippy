@@ -7,6 +7,7 @@ import qualified Data.ByteString.Lazy as LazyByteString
 import qualified Data.Version as Version
 import qualified Paths_zippy as Package
 import qualified RocketLeague.Replay as Replay
+import qualified RocketLeague.Stream as Stream
 import qualified System.Console.GetOpt as Console
 import qualified System.Environment as Environment
 import qualified System.Exit as Exit
@@ -61,11 +62,11 @@ mainWith name arguments = do
   output <- case Config.determineMode config of
     Mode.Decode -> do
       replay <- Result.result die pure $ Decoder.runSimple FromBytes.fromBytes input
-      pure . Json.encode $ ToJson.toJson (replay :: Replay.Replay)
+      pure . Json.encode $ ToJson.toJson (replay :: Replay.Replay Stream.Stream)
     Mode.Encode -> do
       json <- Result.result die pure $ Decoder.runSimple Json.decode input
       replay <- Result.result die pure $ Decoder.runSimple FromJson.fromJson json
-      pure $ ToBytes.toBytes (replay :: Replay.Replay)
+      pure $ ToBytes.toBytes (replay :: Replay.Replay Stream.Stream)
 
   case Config.output config of
     Option.None -> Builder.hPutBuilder IO.stdout output

@@ -89,5 +89,8 @@ word16ToWord32 = fromIntegral
 word32ToDouble :: Word.Word32 -> Double
 word32ToDouble = fromIntegral
 
+word32ToInt :: Word.Word32 -> Int
+word32ToInt = fromIntegral
+
 word32ToWord64 :: Word.Word32 -> Word.Word64
 word32ToWord64 = fromIntegral
