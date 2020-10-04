@@ -10,7 +10,9 @@ newtype U8 = U8
   } deriving (Eq, Show)
 
 decode :: ByteDecoder.ByteDecoder U8
-decode = fail "U8/decode"
+decode = ByteDecoder.label "U8" (do
+  theValue <- ByteDecoder.word8
+  pure U8 { value = theValue })
 
 encode :: U8 -> Builder.Builder
 encode = error "U8/encode"

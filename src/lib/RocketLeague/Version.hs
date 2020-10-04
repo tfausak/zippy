@@ -3,6 +3,7 @@ module RocketLeague.Version where
 import qualified Data.ByteString.Builder as Builder
 import qualified RocketLeague.U32 as U32
 import qualified Zippy.ByteDecoder as ByteDecoder
+import qualified Zippy.JsonDecoder as JsonDecoder
 import qualified Zippy.Type.Json as Json
 
 data Version = Version
@@ -10,13 +11,19 @@ data Version = Version
   } deriving (Eq, Show)
 
 decode :: ByteDecoder.ByteDecoder Version
-decode = fail "Version/decode"
+decode = ByteDecoder.label "Version" (do
+  theMajor <- ByteDecoder.label "major" U32.decode
+  pure Version { major = theMajor })
 
 encode :: Version -> Builder.Builder
-encode = error "Version/encode"
+encode version = U32.encode (major version)
 
-fromJson :: Json.Json -> Either String Version
-fromJson _ = Left "Version/fromJson"
+fromJson :: JsonDecoder.JsonDecoder Version
+fromJson = JsonDecoder.object (\ object -> do
+  theMajor <- JsonDecoder.required "major" object U32.fromJson
+  pure Version { major = theMajor })
 
 toJson :: Version -> Json.Json
-toJson = error "Version/toJson"
+toJson version = Json.object
+  [ ("major", U32.toJson (major version))
+  ]

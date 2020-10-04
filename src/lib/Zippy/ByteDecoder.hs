@@ -24,5 +24,10 @@ count n = Decoder.Decoder $ \ s1 _ -> if n > ByteString.length s1
 label :: String -> ByteDecoder a -> ByteDecoder a
 label = Decoder.label
 
+munch :: (Word.Word8 -> Bool) -> ByteDecoder ByteString.ByteString
+munch f = Decoder.Decoder $ \ s1 _ ->
+  let (x, s2) = ByteString.span f s1
+  in pure (Result.Pass (Pair.Pair s2 x))
+
 word8 :: ByteDecoder Word.Word8
 word8 = fmap ByteString.head (count 1)

@@ -3,6 +3,7 @@ module RocketLeague.Section where
 import qualified Data.ByteString.Builder as Builder
 import qualified RocketLeague.U32 as U32
 import qualified Zippy.ByteDecoder as ByteDecoder
+import qualified Zippy.JsonDecoder as JsonDecoder
 import qualified Zippy.Type.Json as Json
 
 newtype Section a = Section
@@ -17,10 +18,10 @@ decode decodeValue = ByteDecoder.label "Section" (do
   pure Section { value = theValue })
 
 encode :: (a -> Builder.Builder) -> Section a -> Builder.Builder
-encode = error "Section/encode"
+encode f = f . value
 
-fromJson :: (Json.Json -> Either String a) -> Json.Json -> Either String (Section a)
-fromJson _ _ = Left "Section/fromJson"
+fromJson :: (JsonDecoder.JsonDecoder a) -> JsonDecoder.JsonDecoder (Section a)
+fromJson = fmap Section
 
 toJson :: (a -> Json.Json) -> Section a -> Json.Json
-toJson = error "Section/toJson"
+toJson f = f . value
