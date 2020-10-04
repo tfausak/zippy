@@ -39,8 +39,10 @@ library
   other-modules:
     Paths_zippy
     RocketLeague.Header
+    RocketLeague.I32
     RocketLeague.Replay
     RocketLeague.Section
+    RocketLeague.Str
     RocketLeague.U16
     RocketLeague.U32
     RocketLeague.U8

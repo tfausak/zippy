@@ -150,9 +150,9 @@ encode json = case json of
   Null -> encodeNull
   Boolean x -> encodeBoolean x
   Number x -> encodeNumber x
+  String x -> encodeString x
   Array x -> encodeArray x
   Object x -> encodeObject x
-  _ -> mempty
 
 encodeNull :: Builder.Builder
 encodeNull = Builder.string7 "null"

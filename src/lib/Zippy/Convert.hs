@@ -2,10 +2,20 @@ module Zippy.Convert where
 
 import qualified Control.Monad.Fail as Fail
 import qualified Data.Bits as Bits
+import qualified Data.Int as Int
 import qualified Data.Word as Word
 
 combine :: Bits.Bits b => (a -> b) -> Int -> a -> a -> b
 combine f n x y = f x Bits..|. Bits.shift (f y) n
+
+doubleToInt8 :: Fail.MonadFail m => Double -> m Int.Int8
+doubleToInt8 = toBounded int8ToDouble
+
+doubleToInt16 :: Fail.MonadFail m => Double -> m Int.Int16
+doubleToInt16 = toBounded int16ToDouble
+
+doubleToInt32 :: Fail.MonadFail m => Double -> m Int.Int32
+doubleToInt32 = toBounded int32ToDouble
 
 doubleToWord8 :: Fail.MonadFail m => Double -> m Word.Word8
 doubleToWord8 = toBounded word8ToDouble
@@ -15,6 +25,27 @@ doubleToWord16 = toBounded word16ToDouble
 
 doubleToWord32 :: Fail.MonadFail m => Double -> m Word.Word32
 doubleToWord32 = toBounded word32ToDouble
+
+int8ToDouble :: Int.Int8 -> Double
+int8ToDouble = fromIntegral
+
+int8ToInt16 :: Int.Int8 -> Int.Int16
+int8ToInt16 = fromIntegral
+
+int16ToDouble :: Int.Int16 -> Double
+int16ToDouble = fromIntegral
+
+int16ToInt32 :: Int.Int16 -> Int.Int32
+int16ToInt32 = fromIntegral
+
+int32ToDouble :: Int.Int32 -> Double
+int32ToDouble = fromIntegral
+
+int32ToInt :: Int.Int32 -> Int
+int32ToInt = fromIntegral
+
+intToInt32 :: Int -> Int.Int32
+intToInt32 = fromIntegral -- TODO: unsafe?
 
 toBounded
   :: (Fail.MonadFail m, RealFrac a, Show a, Bounded b, Integral b)
@@ -29,6 +60,9 @@ toBounded f x =
 
 word8ToDouble :: Word.Word8 -> Double
 word8ToDouble = fromIntegral
+
+word8ToInt8 :: Word.Word8 -> Int.Int8
+word8ToInt8 = fromIntegral
 
 word8ToWord16 :: Word.Word8 -> Word.Word16
 word8ToWord16 = fromIntegral
