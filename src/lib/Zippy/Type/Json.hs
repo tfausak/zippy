@@ -8,6 +8,7 @@ import qualified Data.ByteString.Builder.Prim as B
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Word as Word
+import qualified Numeric
 import qualified Text.Read as Read
 import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Type.List as List
@@ -80,7 +81,7 @@ decodeTrue = do
 
 decodeNumber :: ByteDecoder.ByteDecoder Json
 decodeNumber = do
-  bytes <- ByteDecoder.munch $ \ x -> 0x30 <= x && x <= 0x39 || x == 0x2e
+  bytes <- ByteDecoder.munch $ \ x -> 0x30 <= x && x <= 0x39 || x == 0x2e || x == 0x2d
   decodeBlankSpaces
   case Read.readMaybe . Text.unpack $ Text.decodeUtf8 bytes of
     Nothing -> fail $ "decodeNumber: " <> show bytes
@@ -161,7 +162,7 @@ encodeBoolean :: Bool -> Builder.Builder
 encodeBoolean = Builder.string7 . Bool.bool "false" "true"
 
 encodeNumber :: Double -> Builder.Builder
-encodeNumber = Builder.doubleDec
+encodeNumber = Builder.string7 . ($ "") . Numeric.showFFloat Nothing
 
 encodeString :: Text.Text -> Builder.Builder
 encodeString x =

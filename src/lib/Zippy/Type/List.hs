@@ -8,6 +8,19 @@ data List a
   | Node a (List a)
   deriving (Eq, Show)
 
+instance Foldable List where
+  foldr f z xs = case xs of
+    Empty -> z
+    Node x ys -> foldr f (f x z) ys
+
+instance Functor List where
+  fmap f xs = case xs of
+    Empty -> Empty
+    Node x ys -> Node (f x) $ fmap f ys
+
+instance Traversable List where
+  traverse f = fmap fromList . traverse f . toList
+
 find :: Eq k => k -> List (Pair.Pair k v) -> Option.Option v
 find k xs = case xs of
   Empty -> Option.None
@@ -15,6 +28,14 @@ find k xs = case xs of
 
 fromList :: [a] -> List a
 fromList = foldr Node Empty
+
+reverse :: List a -> List a
+reverse = reverseWith Empty
+
+reverseWith :: List a -> List a -> List a
+reverseWith list xs = case xs of
+  Empty -> list
+  Node x ys -> reverseWith (Node x list) ys
 
 toList :: List a -> [a]
 toList xs = case xs of

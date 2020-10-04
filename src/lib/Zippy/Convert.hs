@@ -4,9 +4,13 @@ import qualified Control.Monad.Fail as Fail
 import qualified Data.Bits as Bits
 import qualified Data.Int as Int
 import qualified Data.Word as Word
+import qualified Unsafe.Coerce as Unsafe
 
 combine :: Bits.Bits b => (a -> b) -> Int -> a -> a -> b
 combine f n x y = f x Bits..|. Bits.shift (f y) n
+
+doubleToFloat :: Double -> Float
+doubleToFloat = realToFrac -- TODO: unsafe?
 
 doubleToInt8 :: Fail.MonadFail m => Double -> m Int.Int8
 doubleToInt8 = toBounded int8ToDouble
@@ -25,6 +29,9 @@ doubleToWord16 = toBounded word16ToDouble
 
 doubleToWord32 :: Fail.MonadFail m => Double -> m Word.Word32
 doubleToWord32 = toBounded word32ToDouble
+
+floatToDouble :: Float -> Double
+floatToDouble = realToFrac
 
 int8ToDouble :: Int.Int8 -> Double
 int8ToDouble = fromIntegral
@@ -47,6 +54,9 @@ int32ToInt = fromIntegral
 intToInt32 :: Int -> Int.Int32
 intToInt32 = fromIntegral -- TODO: unsafe?
 
+intToWord32 :: Int -> Word.Word32
+intToWord32 = fromIntegral -- TODO: unsafe?
+
 toBounded
   :: (Fail.MonadFail m, RealFrac a, Show a, Bounded b, Integral b)
   => (b -> a) -> a -> m b
@@ -57,6 +67,9 @@ toBounded f x =
     fail $ "too large (" <> show x <> " > " <> show hi <> ")"
   else
     pure $ round x
+
+unsafeWord32ToFloat :: Word.Word32 -> Float
+unsafeWord32ToFloat = Unsafe.unsafeCoerce
 
 word8ToDouble :: Word.Word8 -> Double
 word8ToDouble = fromIntegral
@@ -75,3 +88,6 @@ word16ToWord32 = fromIntegral
 
 word32ToDouble :: Word.Word32 -> Double
 word32ToDouble = fromIntegral
+
+word32ToWord64 :: Word.Word32 -> Word.Word64
+word32ToWord64 = fromIntegral

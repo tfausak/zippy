@@ -45,6 +45,9 @@ fromLatin1Bytes =
   . ByteDecoder.count
   . (\ n -> if n == 0x05000000 then 8 else n)
 
+fromString :: String -> Str
+fromString = Str . Text.pack
+
 fromUtf16Bytes :: Int -> ByteDecoder.ByteDecoder Text.Text
 fromUtf16Bytes =
   fmap (Text.decodeUtf16LEWith Text.lenientDecode)
@@ -62,6 +65,9 @@ toLatin1Bytes :: Text.Text -> Builder.Builder
 toLatin1Bytes t =
   (ToBytes.toBytes . I32.I32 . Convert.intToInt32 $ Text.length t)
   <> Builder.string8 (Text.unpack t)
+
+toString :: Str -> String
+toString = Text.unpack . value
 
 toUtf16Bytes :: Text.Text -> Builder.Builder
 toUtf16Bytes t =
