@@ -39,7 +39,10 @@ library
   other-modules:
     Paths_zippy
     RocketLeague.Array
+    RocketLeague.AttributeMapping
     RocketLeague.Boolean
+    RocketLeague.Cache
+    RocketLeague.ClassMapping
     RocketLeague.Content
     RocketLeague.Dictionary
     RocketLeague.F32

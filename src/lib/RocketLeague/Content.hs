@@ -1,6 +1,8 @@
 module RocketLeague.Content where
 
 import qualified RocketLeague.Array as Array
+import qualified RocketLeague.Cache as Cache
+import qualified RocketLeague.ClassMapping as ClassMapping
 import qualified RocketLeague.KeyFrame as KeyFrame
 import qualified RocketLeague.Mark as Mark
 import qualified RocketLeague.Message as Message
@@ -20,8 +22,8 @@ data Content frames = Content
   , packages :: Array.Array Str.Str
   , objects :: Array.Array Str.Str
   , names :: Array.Array Str.Str
-  -- , classMappings :: Array.Array ClassMapping.ClassMapping
-  -- , caches :: Array.Array Cache.Cache
+  , classMappings :: Array.Array ClassMapping.ClassMapping
+  , caches :: Array.Array Cache.Cache
   } deriving (Eq, Show)
 
 instance FromBytes.FromBytes frames => FromBytes.FromBytes (Content frames) where
@@ -34,7 +36,9 @@ instance FromBytes.FromBytes frames => FromBytes.FromBytes (Content frames) wher
     packages <- Decoder.label "packages" FromBytes.fromBytes
     objects <- Decoder.label "objects" FromBytes.fromBytes
     names <- Decoder.label "names" FromBytes.fromBytes
-    pure Content { levels, keyFrames, frames, messages, marks, packages, objects, names }
+    classMappings <- Decoder.label "classMappings" FromBytes.fromBytes
+    caches <- Decoder.label "caches" FromBytes.fromBytes
+    pure Content { levels, keyFrames, frames, messages, marks, packages, objects, names, classMappings, caches }
 
 instance FromJson.FromJson frames => FromJson.FromJson (Content frames) where
   fromJson = FromJson.object $ \ object -> do
@@ -46,7 +50,9 @@ instance FromJson.FromJson frames => FromJson.FromJson (Content frames) where
     packages <- FromJson.required object "packages"
     objects <- FromJson.required object "objects"
     names <- FromJson.required object "names"
-    pure Content { levels, keyFrames, frames, messages, marks, packages, objects, names }
+    classMappings <- FromJson.required object "classMappings"
+    caches <- FromJson.required object "caches"
+    pure Content { levels, keyFrames, frames, messages, marks, packages, objects, names, classMappings, caches }
 
 instance ToBytes.ToBytes frames => ToBytes.ToBytes (Content frames) where
   toBytes header = ToBytes.toBytes (levels header)
@@ -57,6 +63,8 @@ instance ToBytes.ToBytes frames => ToBytes.ToBytes (Content frames) where
     <> ToBytes.toBytes (packages header)
     <> ToBytes.toBytes (objects header)
     <> ToBytes.toBytes (names header)
+    <> ToBytes.toBytes (classMappings header)
+    <> ToBytes.toBytes (caches header)
 
 instance ToJson.ToJson frames => ToJson.ToJson (Content frames) where
   toJson header = ToJson.object
@@ -68,4 +76,6 @@ instance ToJson.ToJson frames => ToJson.ToJson (Content frames) where
     , ("packages", ToJson.toJson $ packages header)
     , ("objects", ToJson.toJson $ objects header)
     , ("names", ToJson.toJson $ names header)
+    , ("classMappings", ToJson.toJson $ classMappings header)
+    , ("caches", ToJson.toJson $ caches header)
     ]
