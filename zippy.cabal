@@ -62,7 +62,6 @@ library
     Zippy.Class.ToBytes
     Zippy.Class.ToJson
     Zippy.Convert
-    Zippy.JsonDecoder
     Zippy.Main
     Zippy.Type.Config
     Zippy.Type.Decoder

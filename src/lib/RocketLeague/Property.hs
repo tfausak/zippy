@@ -50,7 +50,7 @@ instance FromJson.FromJson Property where
 
 instance ToBytes.ToBytes Property where
   toBytes x = (ToBytes.toBytes . Str.Str $ toTag x)
-    <> ToBytes.toBytes (U64.U64 0)
+    <> ToBytes.toBytes (U64.U64 0) -- TODO
     <> case x of
       Array y -> ToBytes.toBytes y
       Bool y -> ToBytes.toBytes y
