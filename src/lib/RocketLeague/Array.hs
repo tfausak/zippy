@@ -23,7 +23,7 @@ instance FromJson.FromJson a => FromJson.FromJson (Array a) where
 
 instance ToBytes.ToBytes a => ToBytes.ToBytes (Array a) where
   toBytes x =
-    ToBytes.toBytes (Convert.intToWord32 (length (value x)))
+    (ToBytes.toBytes . Convert.unsafeIntToWord32 . length $ value x)
     <> ToBytes.toBytes (value x)
 
 instance ToJson.ToJson a => ToJson.ToJson (Array a) where

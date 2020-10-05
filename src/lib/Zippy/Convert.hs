@@ -3,6 +3,7 @@ module Zippy.Convert where
 import qualified Control.Monad.Fail as Fail
 import qualified Data.Bits as Bits
 import qualified Data.Int as Int
+import qualified Data.Maybe as Maybe
 import qualified Data.Word as Word
 import qualified Unsafe.Coerce as Unsafe
 
@@ -10,7 +11,7 @@ combine :: Bits.Bits b => (a -> b) -> Int -> a -> a -> b
 combine f n x y = f x Bits..|. Bits.shift (f y) n
 
 doubleToFloat :: Double -> Float
-doubleToFloat = realToFrac -- TODO: unsafe?
+doubleToFloat = realToFrac
 
 doubleToInt8 :: Fail.MonadFail m => Double -> m Int.Int8
 doubleToInt8 = toBounded int8ToDouble
@@ -51,12 +52,6 @@ int32ToDouble = fromIntegral
 int32ToInt :: Int.Int32 -> Int
 int32ToInt = fromIntegral
 
-intToInt32 :: Int -> Int.Int32
-intToInt32 = fromIntegral -- TODO: unsafe?
-
-intToWord32 :: Int -> Word.Word32
-intToWord32 = fromIntegral -- TODO: unsafe?
-
 toBounded
   :: (Fail.MonadFail m, RealFrac a, Show a, Bounded b, Integral b)
   => (b -> a) -> a -> m b
@@ -67,6 +62,14 @@ toBounded f x =
     Fail.fail $ "too large (" <> show x <> " > " <> show hi <> ")"
   else
     pure $ round x
+
+unsafeIntToInt32 :: Int -> Int.Int32
+unsafeIntToInt32 x = Maybe.fromMaybe (error $ "unsafeIntToInt32 " <> show x)
+  $ Bits.toIntegralSized x
+
+unsafeIntToWord32 :: Int -> Word.Word32
+unsafeIntToWord32 x = Maybe.fromMaybe (error $ "unsafeIntToWord32 " <> show x)
+  $ Bits.toIntegralSized x
 
 unsafeWord32ToFloat :: Word.Word32 -> Float
 unsafeWord32ToFloat = Unsafe.unsafeCoerce

@@ -23,7 +23,7 @@ instance FromJson.FromJson Stream where
   fromJson = pure $ Stream ByteString.empty -- TODO
 
 instance ToBytes.ToBytes Stream where
-  toBytes x = (ToBytes.toBytes . U32.U32 . Convert.intToWord32 . ByteString.length $ value x)
+  toBytes x = (ToBytes.toBytes . U32.U32 . Convert.unsafeIntToWord32 . ByteString.length $ value x)
     <> Builder.byteString (value x)
 
 instance ToJson.ToJson Stream where
