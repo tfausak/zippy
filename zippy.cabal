@@ -46,6 +46,8 @@ library
     RocketLeague.Header
     RocketLeague.I32
     RocketLeague.KeyFrame
+    RocketLeague.Mark
+    RocketLeague.Message
     RocketLeague.Property
     RocketLeague.Replay
     RocketLeague.Section

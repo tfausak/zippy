@@ -2,6 +2,8 @@ module RocketLeague.Content where
 
 import qualified RocketLeague.Array as Array
 import qualified RocketLeague.KeyFrame as KeyFrame
+import qualified RocketLeague.Mark as Mark
+import qualified RocketLeague.Message as Message
 import qualified RocketLeague.Str as Str
 import qualified Zippy.Class.FromBytes as FromBytes
 import qualified Zippy.Class.FromJson as FromJson
@@ -13,11 +15,11 @@ data Content frames = Content
   { levels :: Array.Array Str.Str
   , keyFrames :: Array.Array KeyFrame.KeyFrame
   , frames :: frames
-  -- , messages :: Array.Array Message.Message
-  -- , marks :: Array.Array Mark.Mark
-  -- , packages :: Array.Array Str.Str
-  -- , objects :: Array.Array Str.Str
-  -- , names :: Array.Array Str.Str
+  , messages :: Array.Array Message.Message
+  , marks :: Array.Array Mark.Mark
+  , packages :: Array.Array Str.Str
+  , objects :: Array.Array Str.Str
+  , names :: Array.Array Str.Str
   -- , classMappings :: Array.Array ClassMapping.ClassMapping
   -- , caches :: Array.Array Cache.Cache
   } deriving (Eq, Show)
@@ -27,23 +29,43 @@ instance FromBytes.FromBytes frames => FromBytes.FromBytes (Content frames) wher
     levels <- Decoder.label "levels" FromBytes.fromBytes
     keyFrames <- Decoder.label "keyFrames" FromBytes.fromBytes
     frames <- Decoder.label "frames" FromBytes.fromBytes
-    pure Content { levels, keyFrames, frames }
+    messages <- Decoder.label "messages" FromBytes.fromBytes
+    marks <- Decoder.label "marks" FromBytes.fromBytes
+    packages <- Decoder.label "packages" FromBytes.fromBytes
+    objects <- Decoder.label "objects" FromBytes.fromBytes
+    names <- Decoder.label "names" FromBytes.fromBytes
+    pure Content { levels, keyFrames, frames, messages, marks, packages, objects, names }
 
 instance FromJson.FromJson frames => FromJson.FromJson (Content frames) where
   fromJson = FromJson.object $ \ object -> do
     levels <- FromJson.required object "levels"
     keyFrames <- FromJson.required object "keyFrames"
     frames <- FromJson.required object "frames"
-    pure Content { levels, keyFrames, frames }
+    messages <- FromJson.required object "messages"
+    marks <- FromJson.required object "marks"
+    packages <- FromJson.required object "packages"
+    objects <- FromJson.required object "objects"
+    names <- FromJson.required object "names"
+    pure Content { levels, keyFrames, frames, messages, marks, packages, objects, names }
 
 instance ToBytes.ToBytes frames => ToBytes.ToBytes (Content frames) where
   toBytes header = ToBytes.toBytes (levels header)
     <> ToBytes.toBytes (keyFrames header)
     <> ToBytes.toBytes (frames header)
+    <> ToBytes.toBytes (messages header)
+    <> ToBytes.toBytes (marks header)
+    <> ToBytes.toBytes (packages header)
+    <> ToBytes.toBytes (objects header)
+    <> ToBytes.toBytes (names header)
 
 instance ToJson.ToJson frames => ToJson.ToJson (Content frames) where
   toJson header = ToJson.object
     [ ("levels", ToJson.toJson $ levels header)
     , ("keyFrames", ToJson.toJson $ keyFrames header)
     , ("frames", ToJson.toJson $ frames header)
+    , ("messages", ToJson.toJson $ messages header)
+    , ("marks", ToJson.toJson $ marks header)
+    , ("packages", ToJson.toJson $ packages header)
+    , ("objects", ToJson.toJson $ objects header)
+    , ("names", ToJson.toJson $ names header)
     ]
