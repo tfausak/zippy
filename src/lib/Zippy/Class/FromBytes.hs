@@ -1,9 +1,15 @@
 module Zippy.Class.FromBytes where
 
+import qualified Control.Applicative as Applicative
+import qualified Control.Monad as Monad
+import qualified Control.Monad.Fail as Fail
 import qualified Data.ByteString as ByteString
 import qualified Data.Functor.Identity as Identity
 import qualified Data.Int as Int
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
 import qualified Data.Word as Word
+import qualified Text.Read as Read
 import qualified Zippy.Convert as Convert
 import qualified Zippy.Type.Decoder as Decoder
 import qualified Zippy.Type.Json as Json
@@ -32,7 +38,9 @@ instance FromBytes Int.Int32 where
   fromBytes = fmap Convert.word32ToInt32 fromBytes
 
 instance FromBytes Json.Json where
-  fromBytes = Json.decode
+  fromBytes = do
+    decodeBlankSpaces
+    decodeJson
 
 instance (FromBytes a, FromBytes b) => FromBytes (Pair.Pair a b) where
   fromBytes = do
@@ -79,3 +87,129 @@ munch :: (Word.Word8 -> Bool) -> ByteDecoder ByteString.ByteString
 munch f = Decoder.Decoder $ \ s1 _ ->
   let (x, s2) = ByteString.span f s1
   in pure . Result.Pass $ Pair.Pair s2 x
+
+-------------------------------------------------------------------------------
+
+decodeBlankSpaces :: ByteDecoder ()
+decodeBlankSpaces = Monad.void (munch isBlankSpace)
+
+isBlankSpace :: Word.Word8 -> Bool
+isBlankSpace byte = case byte of
+  0x09 -> True -- '\t'
+  0x0a -> True -- '\n'
+  0x0d -> True -- '\r'
+  0x20 -> True -- ' '
+  _ -> False
+
+decodeJson :: ByteDecoder Json.Json
+decodeJson = decodeNull
+  Applicative.<|> decodeBoolean
+  Applicative.<|> decodeNumber
+  Applicative.<|> decodeString
+  Applicative.<|> decodeArray
+  Applicative.<|> decodeObject
+
+decodeNull :: ByteDecoder Json.Json
+decodeNull = do
+  decodeSymbol "null"
+  pure Json.Null
+
+decodeSymbol :: String -> ByteDecoder ()
+decodeSymbol string = do
+  Monad.void $ mapM_ decodeChar string
+  decodeBlankSpaces
+
+decodeChar :: Char -> ByteDecoder ()
+decodeChar expected = do
+  actual <- fromBytes
+  let
+    charToWord8 :: Char -> Word.Word8
+    charToWord8 = fromIntegral . fromEnum
+    word8ToChar :: Word.Word8 -> Char
+    word8ToChar = toEnum . fromIntegral
+  Monad.when (charToWord8 expected /= actual)
+    . Fail.fail
+    $ "expected "
+    <> show expected
+    <> " but got "
+    <> show (word8ToChar actual)
+
+decodeBoolean :: ByteDecoder Json.Json
+decodeBoolean = decodeFalse Applicative.<|> decodeTrue
+
+decodeFalse :: ByteDecoder Json.Json
+decodeFalse = do
+  decodeSymbol "false"
+  pure $ Json.Boolean False
+
+decodeTrue :: ByteDecoder Json.Json
+decodeTrue = do
+  decodeSymbol "true"
+  pure $ Json.Boolean True
+
+decodeNumber :: ByteDecoder Json.Json
+decodeNumber = do
+  bytes <- munch $ \ x -> 0x30 <= x && x <= 0x39 || x == 0x2e || x == 0x2d
+  decodeBlankSpaces
+  case Read.readMaybe . Text.unpack $ Text.decodeUtf8 bytes of
+    Nothing -> Fail.fail $ "decodeNumber: " <> show bytes
+    Just x -> pure $ Json.Number x
+
+decodeString :: ByteDecoder Json.Json
+decodeString = fmap Json.String decodeText
+
+decodeText :: ByteDecoder Text.Text
+decodeText = decodeBetween (decodeSymbol "\"") (decodeSymbol "\"")
+  . fmap Text.decodeUtf8
+  $ munch (/= 0x22)
+
+decodeArray :: ByteDecoder Json.Json
+decodeArray = fmap Json.Array
+  . decodeBetween (decodeSymbol "[") (decodeSymbol "]")
+  $ decodeSeparated (decodeSymbol ",") decodeJson
+
+decodeObject :: ByteDecoder Json.Json
+decodeObject = fmap Json.Object
+    . decodeBetween (decodeSymbol "{") (decodeSymbol "}")
+    $ decodeSeparated (decodeSymbol ",") decodePair
+
+decodeBetween
+  :: ByteDecoder l
+  -> ByteDecoder r
+  -> ByteDecoder a
+  -> ByteDecoder a
+decodeBetween l r d = do
+  Monad.void l
+  x <- d
+  Monad.void r
+  pure x
+
+decodeSeparated
+  :: ByteDecoder s
+  -> ByteDecoder a
+  -> ByteDecoder (List.List a)
+decodeSeparated s d =
+  let
+    many = do
+      x <- d
+      xs <- decodeSome $ do
+        Monad.void s
+        d
+      pure $ List.Node x xs
+  in many Applicative.<|> pure List.Empty
+
+decodeSome :: ByteDecoder a -> ByteDecoder (List.List a)
+decodeSome d = decodeMany d Applicative.<|> pure List.Empty
+
+decodeMany :: ByteDecoder a -> ByteDecoder (List.List a)
+decodeMany d = do
+  x <- d
+  xs <- decodeSome d
+  pure $ List.Node x xs
+
+decodePair :: ByteDecoder (Pair.Pair Text.Text Json.Json)
+decodePair = do
+  k <- decodeText
+  decodeSymbol ":"
+  v <- decodeJson
+  pure $ Pair.Pair k v
