@@ -13,12 +13,6 @@ import qualified Zippy.Type.Pair as Pair
 class ToJson a where
   toJson :: a -> Json.Json
 
-instance ToJson Json.Json where
-  toJson = id
-
-instance ToJson a => ToJson [a] where
-  toJson = toJson . List.fromList
-
 instance ToJson Bool where
   toJson = Json.Boolean
 
@@ -34,6 +28,9 @@ instance ToJson Int.Int16 where
 instance ToJson Int.Int32 where
   toJson = Json.Number . Convert.int32ToDouble
 
+instance ToJson Json.Json where
+  toJson = id
+
 instance ToJson a => ToJson (List.List a) where
   toJson = Json.Array . fmap toJson
 
@@ -41,7 +38,7 @@ instance ToJson a => ToJson (Option.Option a) where
   toJson = Option.option Json.Null toJson
 
 instance (ToJson a, ToJson b) => ToJson (Pair.Pair a b) where
-  toJson (Pair.Pair x y) = toJson [toJson x, toJson y]
+  toJson (Pair.Pair x y) = toJson . List.Node (toJson x) $ List.Node (toJson y) List.Empty
 
 instance ToJson Text.Text where
   toJson = Json.String

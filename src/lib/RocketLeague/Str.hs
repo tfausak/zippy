@@ -6,7 +6,6 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Encoding.Error as Text
 import qualified RocketLeague.I32 as I32
-import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Convert as Convert
 import qualified Zippy.Class.FromBytes as FromBytes
 import qualified Zippy.Class.FromJson as FromJson
@@ -39,19 +38,19 @@ instance ToJson.ToJson Str where
 appendNull :: Text.Text -> Text.Text
 appendNull t = if Text.null t then t else Text.snoc t '\x00'
 
-fromLatin1Bytes :: Int -> ByteDecoder.ByteDecoder Text.Text
+fromLatin1Bytes :: Int -> FromBytes.ByteDecoder Text.Text
 fromLatin1Bytes =
   fmap Text.decodeLatin1
-  . ByteDecoder.count
+  . FromBytes.count
   . (\ n -> if n == 0x05000000 then 8 else n)
 
 fromString :: String -> Str
 fromString = Str . Text.pack
 
-fromUtf16Bytes :: Int -> ByteDecoder.ByteDecoder Text.Text
+fromUtf16Bytes :: Int -> FromBytes.ByteDecoder Text.Text
 fromUtf16Bytes =
   fmap (Text.decodeUtf16LEWith Text.lenientDecode)
-  . ByteDecoder.count
+  . FromBytes.count
   . (* 2)
   . negate
 

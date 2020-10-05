@@ -3,7 +3,6 @@ module RocketLeague.Stream where
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Builder as Builder
 import qualified RocketLeague.U32 as U32
-import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromBytes as FromBytes
 import qualified Zippy.Class.FromJson as FromJson
 import qualified Zippy.Class.ToBytes as ToBytes
@@ -18,7 +17,7 @@ newtype Stream = Stream
 instance FromBytes.FromBytes Stream where
   fromBytes = do
     size <- FromBytes.fromBytes
-    fmap Stream . ByteDecoder.count . Convert.word32ToInt $ U32.value size
+    fmap Stream . FromBytes.count . Convert.word32ToInt $ U32.value size
 
 instance FromJson.FromJson Stream where
   fromJson = pure $ Stream ByteString.empty -- TODO

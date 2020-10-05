@@ -13,7 +13,6 @@ import qualified Zippy.Class.FromBytes as FromBytes
 import qualified Zippy.Class.FromJson as FromJson
 import qualified Zippy.Class.ToBytes as ToBytes
 import qualified Zippy.Class.ToJson as ToJson
-import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Type.Json as Json
 import qualified Zippy.Type.Pair as Pair
 
@@ -89,7 +88,7 @@ toTag x = Text.pack $ case x of
   QWord _ -> "QWord"
   Str _ -> "Str"
 
-fromBytesWith :: Str.Str -> U64.U64 -> ByteDecoder.ByteDecoder Property
+fromBytesWith :: Str.Str -> U64.U64 -> FromBytes.ByteDecoder Property
 fromBytesWith kind _ = case Str.toString kind of
   "ArrayProperty" -> fmap Array FromBytes.fromBytes
   "BoolProperty" -> fmap Bool FromBytes.fromBytes

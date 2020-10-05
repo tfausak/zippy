@@ -18,12 +18,6 @@ type JsonDecoder = Decoder.Decoder Json.Json () Identity.Identity
 class FromJson a where
   fromJson :: JsonDecoder a
 
-instance FromJson Json.Json where
-  fromJson = Decoder.get
-
-instance FromJson a => FromJson [a] where
-  fromJson = fmap List.toList fromJson
-
 instance FromJson Bool where
   fromJson = boolean pure
 
@@ -39,6 +33,9 @@ instance FromJson Int.Int16 where
 instance FromJson Int.Int32 where
   fromJson = number Convert.doubleToInt32
 
+instance FromJson Json.Json where
+  fromJson = Decoder.get
+
 instance FromJson a => FromJson (List.List a) where
   fromJson = array . traverse $ \ j -> Decoder.embed fromJson j ()
 
@@ -51,7 +48,7 @@ instance FromJson a => FromJson (Option.Option a) where
 
 instance (FromJson a, FromJson b) => FromJson (Pair.Pair a b) where
   fromJson = do
-    [jx, jy] <- fromJson
+    List.Node jx (List.Node jy List.Empty) <- fromJson
     x <- Decoder.embed fromJson jx ()
     y <- Decoder.embed fromJson jy ()
     pure $ Pair.Pair x y

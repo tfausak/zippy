@@ -2,7 +2,6 @@ module RocketLeague.Array where
 
 import qualified Data.Word as Word
 import qualified RocketLeague.U32 as U32
-import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromBytes as FromBytes
 import qualified Zippy.Class.FromJson as FromJson
 import qualified Zippy.Class.ToBytes as ToBytes
@@ -35,7 +34,7 @@ fromBytesWith
   => Word.Word32
   -> Word.Word32
   -> List.List a
-  -> ByteDecoder.ByteDecoder (Array a)
+  -> FromBytes.ByteDecoder (Array a)
 fromBytesWith size index list =
   if index >= size
   then pure . Array $ List.reverse list

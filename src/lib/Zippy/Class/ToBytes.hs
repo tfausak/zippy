@@ -31,7 +31,7 @@ instance ToBytes Json.Json where
   toBytes = Json.encode
 
 instance ToBytes a => ToBytes (List.List a) where
-  toBytes = foldMap toBytes . List.toList
+  toBytes = foldMap toBytes
 
 instance ToBytes a => ToBytes (Option.Option a) where
   toBytes = Option.option mempty toBytes

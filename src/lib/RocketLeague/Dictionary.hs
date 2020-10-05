@@ -2,7 +2,6 @@ module RocketLeague.Dictionary where
 
 import qualified Data.Bifunctor as Bifunctor
 import qualified RocketLeague.Str as Str
-import qualified Zippy.ByteDecoder as ByteDecoder
 import qualified Zippy.Class.FromBytes as FromBytes
 import qualified Zippy.Class.FromJson as FromJson
 import qualified Zippy.Class.ToBytes as ToBytes
@@ -37,7 +36,7 @@ instance ToJson.ToJson a => ToJson.ToJson (Dictionary a) where
 fromBytesWith
   :: FromBytes.FromBytes a
   => List.List (Pair.Pair Str.Str a)
-  -> ByteDecoder.ByteDecoder (Dictionary a)
+  -> FromBytes.ByteDecoder (Dictionary a)
 fromBytesWith list = do
   key <- FromBytes.fromBytes
   if key == Str.fromString "None"
