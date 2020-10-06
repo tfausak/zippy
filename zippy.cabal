@@ -46,6 +46,8 @@ library
     RocketLeague.Content
     RocketLeague.Dictionary
     RocketLeague.F32
+    RocketLeague.Frame
+    RocketLeague.Frames
     RocketLeague.Header
     RocketLeague.I32
     RocketLeague.KeyFrame
@@ -61,12 +63,16 @@ library
     RocketLeague.U64
     RocketLeague.U8
     RocketLeague.Version
+    Zippy.Class.FromBits
     Zippy.Class.FromBytes
     Zippy.Class.FromJson
+    Zippy.Class.ToBits
     Zippy.Class.ToBytes
     Zippy.Class.ToJson
     Zippy.Convert
     Zippy.Main
+    Zippy.Type.BitBuilder
+    Zippy.Type.BitString
     Zippy.Type.Config
     Zippy.Type.Decoder
     Zippy.Type.Flag
