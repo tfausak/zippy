@@ -40,10 +40,11 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: output/zippy*
-          name: ${{ matrix.os }}-ghc-${{ matrix.ghc }}-zippy-${{ github.sha }}
+          name: zippy-${{ matrix.os }}-ghc-${{ matrix.ghc }}-${{ github.sha }}
       - run: cabal check
       - run: cabal sdist --output-dir output
-      - uses: actions/upload-artifact@v2
+      - if: matrix.os == 'ubuntu-18.04' && matrix.ghc == '8.10'
+        uses: actions/upload-artifact@v2
         with:
           path: output/zippy-*.tar.gz
-          name: ${{ matrix.os }}-ghc-${{ matrix.ghc }}-zippy-${{ github.sha }}.tar.gz
+          name: zippy-${{ github.sha }}.tar.gz
