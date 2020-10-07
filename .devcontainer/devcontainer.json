@@ -1,5 +1,5 @@
 {
-  "build": { "dockerfile": "Dockerfile" },
+  "image": "haskell:8.10.2",
   "extensions": [ "taylorfausak.purple-yolk" ],
-  "settings": { "purple-yolk.ghci.command": "cabal repl --repl-options -ddump-json" }
+  "settings": { "purple-yolk.ghci.command": "stack ghci --ghc-options -ddump-json --main-is zippy:test --test" }
 }

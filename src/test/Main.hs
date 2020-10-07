@@ -39,6 +39,8 @@ test replay = do
       (format allocations)
       (format duration)
 
+  mapM_ Directory.removeFile [json, output]
+
 format :: Show a => a -> String
 format = reverse . List.intercalate "," . chunksOf 3 . reverse . show
 
