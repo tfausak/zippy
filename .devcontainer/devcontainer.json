@@ -1,0 +1,6 @@
+{
+  "image": "alpine:3.12.0",
+  "extensions": [ "taylorfausak.purple-yolk" ],
+  "postCreateCommand": "apk update && apk add cabal entr ghc git musl-dev wget && cabal update",
+  "settings": { "purple-yolk.ghci.command": "cabal repl --repl-options -ddump-json" }
+}

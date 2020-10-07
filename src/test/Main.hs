@@ -1,10 +1,8 @@
-import qualified Control.Exception as Exception
 import qualified Data.Int as Int
 import qualified Data.List as List
 import qualified Data.Word as Word
 import qualified GHC.Clock as Clock
 import qualified System.Directory as Directory
-import qualified System.IO as IO
 import qualified System.Mem as Mem
 import qualified Text.Printf as Printf
 import qualified Zippy
@@ -25,20 +23,21 @@ test replay = do
   size <- Directory.getFileSize input
   Printf.printf "%s input %s bytes\n" replay (format size)
 
-  withTemporaryFile ".json" $ \ json -> do
-    do
-      (allocations, duration) <- zippy input json
-      Printf.printf
-        "  decode allocations: %s bytes, duration: %s nanoseconds\n"
-        (format allocations)
-        (format duration)
+  let json = "output/" <> replay <> ".json"
+  do
+    (allocations, duration) <- zippy input json
+    Printf.printf
+      "  decode allocations: %s bytes, duration: %s nanoseconds\n"
+      (format allocations)
+      (format duration)
 
-    withTemporaryFile ".replay" $ \ output -> do
-      (allocations, duration) <- zippy json output
-      Printf.printf
-        "  encode allocations: %s bytes, duration: %s nanoseconds\n"
-        (format allocations)
-        (format duration)
+  let output = "output/" <> replay <> ".replay"
+  do
+    (allocations, duration) <- zippy json output
+    Printf.printf
+      "  encode allocations: %s bytes, duration: %s nanoseconds\n"
+      (format allocations)
+      (format duration)
 
 format :: Show a => a -> String
 format = reverse . List.intercalate "," . chunksOf 3 . reverse . show
@@ -67,17 +66,6 @@ withDuration action = do
   result <- action
   after <- Clock.getMonotonicTimeNSec
   pure (after - before, result)
-
-withTemporaryFile :: String -> (FilePath -> IO a) -> IO a
-withTemporaryFile template action = do
-  directory <- Directory.getTemporaryDirectory
-  Exception.bracket
-    (do
-      (filePath, handle) <- IO.openTempFile directory template
-      IO.hClose handle
-      pure filePath)
-    Directory.removeFile
-    action
 
 replays :: [String]
 replays =

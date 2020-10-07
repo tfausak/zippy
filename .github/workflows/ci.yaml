@@ -35,5 +35,15 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-${{ matrix.ghc }}-${{ matrix.cabal }}-
             ${{ matrix.os }}-${{ matrix.ghc }}-
-      - run: cabal test
+      - run: cabal test --test-show-details direct
+      - run: cabal install --installdir output --install-method copy
+      - uses: actions/upload-artifact@v2
+        with:
+          path: output/zippy*
+          name: ${{ matrix.os }}-ghc-${{ matrix.ghc }}-zippy-${{ github.sha }}
       - run: cabal check
+      - run: cabal sdist --output-dir output
+      - uses: actions/upload-artifact@v2
+        with:
+          path: output/zippy-*.tar.gz
+          name: ${{ matrix.os }}-ghc-${{ matrix.ghc }}-zippy-${{ github.sha }}.tar.gz
