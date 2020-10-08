@@ -20,8 +20,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          lfs: true
       - id: setup-haskell
         uses: actions/setup-haskell@v1
         with:
