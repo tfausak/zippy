@@ -1,12 +1,73 @@
+import qualified Data.Int as Int
+import qualified Data.List as List
+import qualified Data.Word as Word
+import qualified GHC.Clock as Clock
+import qualified System.Directory as Directory
+import qualified System.Mem as Mem
+import qualified Text.Printf as Printf
 import qualified Zippy
 
 main :: IO ()
-main = mapM_ test replays
+main = do
+  (allocations, (duration, _)) <- withAllocations . withDuration $
+    mapM_ test replays
+
+  Printf.printf
+    "total allocations: %s bytes, duration: %s nanoseconds\n"
+    (format allocations)
+    (format duration)
 
 test :: String -> IO ()
 test replay = do
-  let input = "replays/" ++ replay ++ ".replay"
-  Zippy.mainWith "zippy:test" [input]
+  let input = "replays/" <> replay <> ".replay"
+  size <- Directory.getFileSize input
+  Printf.printf "%s input %s bytes\n" replay (format size)
+
+  let json = "output/" <> replay <> ".json"
+  do
+    (allocations, duration) <- zippy input json
+    Printf.printf
+      "  decode allocations: %s bytes, duration: %s nanoseconds\n"
+      (format allocations)
+      (format duration)
+
+  let output = "output/" <> replay <> ".replay"
+  do
+    (allocations, duration) <- zippy json output
+    Printf.printf
+      "  encode allocations: %s bytes, duration: %s nanoseconds\n"
+      (format allocations)
+      (format duration)
+
+  mapM_ Directory.removeFile [json, output]
+
+format :: Show a => a -> String
+format = reverse . List.intercalate "," . chunksOf 3 . reverse . show
+
+chunksOf :: Int -> [a] -> [[a]]
+chunksOf n xs = case splitAt n xs of
+  ([], _) -> []
+  (ys, zs) -> ys : chunksOf n zs
+
+zippy :: FilePath -> FilePath -> IO (Int.Int64, Word.Word64)
+zippy input output = do
+  (allocations, (duration, _)) <- withAllocations . withDuration $
+    Zippy.mainWith "zippy" ["--input", input, "--output", output]
+  pure (allocations, duration)
+
+withAllocations :: IO a -> IO (Int.Int64, a)
+withAllocations action = do
+  before <- Mem.getAllocationCounter
+  result <- action
+  after <- Mem.getAllocationCounter
+  pure (before - after, result)
+
+withDuration :: IO a -> IO (Word.Word64, a)
+withDuration action = do
+  before <- Clock.getMonotonicTimeNSec
+  result <- action
+  after <- Clock.getMonotonicTimeNSec
+  pure (after - before, result)
 
 replays :: [String]
 replays =

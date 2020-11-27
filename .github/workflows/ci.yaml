@@ -1,10 +1,9 @@
+name: CI
 on:
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
   push:
-    branches:
-      - main
+    branches: [ main ]
 jobs:
   build:
     strategy:
@@ -16,14 +15,10 @@ jobs:
           - { os: ubuntu-18.04, ghc: '8.8', cabal: '3.2' }
           - { os: ubuntu-18.04, ghc: '8.6', cabal: '3.2' }
           - { os: ubuntu-18.04, ghc: '8.4', cabal: '3.2' }
-          - { os: ubuntu-18.04, ghc: '8.2', cabal: '3.2' }
-          - { os: ubuntu-18.04, ghc: '8.0', cabal: '3.2' }
     name: ${{ matrix.os }} ghc-${{ matrix.ghc }} cabal-${{ matrix.cabal }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-        with:
-          lfs: true
       - id: setup-haskell
         uses: actions/setup-haskell@v1
         with:
@@ -37,4 +32,17 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-${{ matrix.ghc }}-${{ matrix.cabal }}-
             ${{ matrix.os }}-${{ matrix.ghc }}-
-      - run: cabal test
+      - run: cabal test --test-show-details direct
+      - run: cabal install --installdir output --install-method copy
+      - run: strip output/zippy*
+      - uses: actions/upload-artifact@v2
+        with:
+          path: output/zippy*
+          name: zippy-${{ matrix.os }}-ghc-${{ matrix.ghc }}-${{ github.sha }}
+      - run: cabal check
+      - run: cabal sdist --output-dir output
+      - if: matrix.os == 'ubuntu-18.04' && matrix.ghc == '8.10'
+        uses: actions/upload-artifact@v2
+        with:
+          path: output/zippy-*.tar.gz
+          name: zippy-${{ github.sha }}.tar.gz

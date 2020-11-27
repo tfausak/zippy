@@ -1,0 +1,3 @@
+packages: .
+package zippy
+  tests: true
