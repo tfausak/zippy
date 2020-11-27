@@ -32,8 +32,9 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-${{ matrix.ghc }}-${{ matrix.cabal }}-
             ${{ matrix.os }}-${{ matrix.ghc }}-
+      - run: cabal build
       - run: cabal test --test-show-details direct
-      - run: cabal install --installdir output --install-method copy
+      - run: cabal exec -- sh -c 'cp -v "$( which zippy )" output'
       - run: strip output/zippy*
       - uses: actions/upload-artifact@v2
         with:
