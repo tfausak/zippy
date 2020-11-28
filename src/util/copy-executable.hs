@@ -13,5 +13,9 @@ main = do
 
 convert :: FilePath -> FilePath
 convert path = case path of
-  '/' : drive : '/' : rest -> drive : ':' : '/' : rest
+  '/' : drive : '/' : rest ->
+    Char.toUpper drive
+    : ':'
+    : '\\'
+    : fmap (\ x -> if x == '/' then '\\' else x) rest
   _ -> path
