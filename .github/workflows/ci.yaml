@@ -36,7 +36,7 @@ jobs:
       - run: cabal test --test-show-details direct
       - id: executable
         run: echo ::set-output "name=path::$( cabal exec which zippy )"
-      - run: cp -v "${{ steps.executable.outputs.path }}" outupt
+      - run: cp -v '${{ steps.executable.outputs.path }}' outupt/
       - run: strip output/zippy*
       - uses: actions/upload-artifact@v2
         with:
