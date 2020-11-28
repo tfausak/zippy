@@ -18,4 +18,5 @@ convert path = case path of
     : ':'
     : '\\'
     : fmap (\ x -> if x == '/' then '\\' else x) rest
+    <> ".exe"
   _ -> path
