@@ -34,9 +34,7 @@ jobs:
             ${{ matrix.os }}-${{ matrix.ghc }}-
       - run: cabal build
       - run: cabal test --test-show-details direct
-      - id: executable
-        run: echo "::set-output name=path::$( cabal exec which zippy )"
-      - run: cp -v '${{ steps.executable.outputs.path }}' output/zippy
+      - run: runghc src/util/copy-executable.hs
       - run: strip output/zippy
       - uses: actions/upload-artifact@v2
         with:
