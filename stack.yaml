@@ -1,2 +1,1 @@
-allow-different-user: true
 resolver: ghc-8.10.2
