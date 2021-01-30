@@ -2,6 +2,7 @@ module RocketLeague.CompressedWord (CompressedWord, fromWord, toWord, fromBits) 
 
 import qualified Data.Bits as Bits
 import qualified Zippy.BitGet as BitGet
+import qualified RocketLeague.Context as Context
 
 newtype CompressedWord
   = CompressedWord Word
@@ -13,20 +14,18 @@ fromWord = CompressedWord
 toWord :: CompressedWord -> Word
 toWord (CompressedWord x) = x
 
-fromBits :: Int -> BitGet.BitGet CompressedWord
-fromBits maxChannels = BitGet.label "CompressedWord" $ do
-  let numBits = floor (logBase 2 $ fromIntegral maxChannels :: Double) :: Int
-  fromBitsWith maxChannels numBits 0 0
+fromBits :: Context.Context -> BitGet.BitGet CompressedWord
+fromBits context = BitGet.label "CompressedWord" $ fromBitsWith context 0 0
 
-fromBitsWith :: Int -> Int -> Int -> Word -> BitGet.BitGet CompressedWord
-fromBitsWith maxChannels numBits bit acc =
-  if bit < numBits
+fromBitsWith :: Context.Context -> Int -> Word -> BitGet.BitGet CompressedWord
+fromBitsWith context bit acc =
+  if bit < Context.numBits context
     then do
       x <- BitGet.bool
-      fromBitsWith maxChannels numBits (bit + 1) (if x then acc + Bits.bit bit else acc)
+      fromBitsWith context (bit + 1) (if x then acc + Bits.bit bit else acc)
     else do
       let next = acc + Bits.bit bit
-      if fromIntegral next < maxChannels
+      if fromIntegral next < Context.maxChannels context
         then do
           x <- BitGet.bool
           pure . fromWord $ if x then next else acc

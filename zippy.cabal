@@ -41,6 +41,7 @@ library
     RocketLeague.ClassMapping
     RocketLeague.CompressedWord
     RocketLeague.Content
+    RocketLeague.Context
     RocketLeague.Dict
     RocketLeague.F32
     RocketLeague.Frame
