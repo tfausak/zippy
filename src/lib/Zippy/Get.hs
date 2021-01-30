@@ -9,7 +9,7 @@ import qualified Exception.Fail as Fail
 newtype Get s m a = Get (s -> m (Either ([String], Exception.SomeException) (s, a)))
 
 instance Functor m => Functor (Get s m) where
-  fmap f g = Get $ \ s -> fmap (fmap (fmap f)) $ run g s
+  fmap f g = Get $ fmap (fmap (fmap f)) . run g
 
 instance Monad m => Applicative (Get s m) where
   pure x = Get $ \ s -> pure $ Right (s, x)
@@ -60,7 +60,7 @@ catch g f = Get $ \ s1 -> do
     Right (s2, x) -> pure $ Right (s2, x)
 
 label :: Functor m => String -> Get s m a -> Get s m a
-label l g = Get $ \ s -> fmap (Bifunctor.first (Bifunctor.first (l :))) $ run g s
+label l g = Get $ fmap (Bifunctor.first (Bifunctor.first (l :))) . run g
 
 embed :: Functor m => Get s m a -> s -> Get t m a
-embed g s = Get $ \ t -> fmap (fmap (Bifunctor.first (const t))) $ run g s
+embed g s = Get $ \ t -> fmap (Bifunctor.first (const t)) <$> run g s

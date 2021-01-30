@@ -32,4 +32,4 @@ fromBytesWith getItem index items = do
       fromBytesWith getItem (index + 1) $ (index, (key, value)) : items
 
 lookup :: String -> Dict a -> Maybe a
-lookup k xs = Prelude.lookup (Str.fromString k) . Array.elems . toArray $ xs
+lookup k = Prelude.lookup (Str.fromString k) . Array.elems . toArray

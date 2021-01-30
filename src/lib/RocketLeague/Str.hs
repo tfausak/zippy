@@ -26,4 +26,4 @@ fromBytes = ByteGet.label "Str" $ do
   size <- ByteGet.label "size" $ fmap I32.toInt I32.fromBytes
   fmap (fromText . Text.dropEnd 1) $ if size < 0
     then fmap Text.decodeUtf16LE . ByteGet.take $ -2 * size
-    else fmap Text.decodeLatin1 $ ByteGet.take size
+    else Text.decodeLatin1 <$> ByteGet.take size

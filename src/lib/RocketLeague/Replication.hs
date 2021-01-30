@@ -20,6 +20,6 @@ fromBits maxChannels = BitGet.label "Replication" $ do
     then do
       isNew <- BitGet.bool
       if isNew
-        then fmap Spawned $ SpawnedReplication.fromBits actorId
-        else fmap Updated $ UpdatedReplication.fromBits actorId
-    else fmap Destroyed $ DestroyedReplication.fromBits actorId
+        then Spawned <$> SpawnedReplication.fromBits actorId
+        else Updated <$> UpdatedReplication.fromBits actorId
+    else Destroyed <$> DestroyedReplication.fromBits actorId

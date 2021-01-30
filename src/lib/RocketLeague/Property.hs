@@ -29,7 +29,7 @@ fromBytes = ByteGet.label "Property" $ do
   tag <- ByteGet.label "tag" Str.fromBytes
   _size <- ByteGet.label "size" U64.fromBytes
   case Str.toString tag of
-    "ArrayProperty" -> fmap Array $ ArrayProperty.fromBytes fromBytes
+    "ArrayProperty" -> Array <$> ArrayProperty.fromBytes fromBytes
     "BoolProperty" -> fmap Bool BoolProperty.fromBytes
     "ByteProperty" -> fmap Byte ByteProperty.fromBytes
     "FloatProperty" -> fmap Float FloatProperty.fromBytes
